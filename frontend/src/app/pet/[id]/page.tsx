@@ -15,7 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/layout/Navbar';
 import PrivateHeader from '@/components/layout/PrivateHeader';
 import Footer from '@/components/layout/Footer';
-import BackToDashboard from '@/components/ui/BackToHome';
+import BackToHome from '@/components/ui/BackToHome';
 
 const adocaoSchema = z.object({
   motivation: z.string().min(20, 'Conte um pouco mais sobre sua motivação (mín. 20 caracteres)'),
@@ -55,7 +55,7 @@ export default function PetDetails() {
     const fetchPet = async () => {
       try {
         setLoading(true);
-        const data = await api.getPetById(Number(id));
+        const data = await api.getPetById(Array.isArray(id) ? id[0] : id);
         setPet(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro ao carregar pet');
@@ -113,7 +113,7 @@ export default function PetDetails() {
 
       {/* Botão voltar: ao dashboard se logado, senão volta no histórico */}
       {isAuthenticated ? (
-        <BackToDashboard />
+        <BackToHome />
       ) : (
         <div className="max-w-6xl mx-auto px-8 pt-8">
           <button
