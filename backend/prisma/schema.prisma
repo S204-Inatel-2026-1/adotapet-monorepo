@@ -123,6 +123,7 @@ model Pet {
   specialNeedsDetails String?
   description         String?
   photoUrl            String?
+  tags                String?
   status              PetStatus @default(AVAILABLE)
   city                String?
   state               String?

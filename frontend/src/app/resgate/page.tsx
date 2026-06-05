@@ -7,9 +7,10 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Navbar from '@/components/layout/Navbar';
+import PrivateHeader from '@/components/layout/PrivateHeader';
 import Footer from '@/components/layout/Footer';
 import BackToHome from '@/components/ui/BackToHome';
-import Header from '@/components/layout/Header';
+import { useAuth } from '@/contexts/AuthContext';
 
 const resgateSchema = z.object({
   // Endereço
@@ -38,6 +39,7 @@ const resgateSchema = z.object({
 type ResgateForm = z.infer<typeof resgateSchema>;
 
 export default function ResgatePage() {
+  const { isAuthenticated } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
 
@@ -78,7 +80,7 @@ export default function ResgatePage() {
   if (submitted) {
     return (
       <main className="bg-[#F9F7F2] min-h-screen font-sans">
-        <Header />
+        {isAuthenticated ? <PrivateHeader /> : <Navbar />}
         <div className="h-20" />
         <div className="max-w-2xl mx-auto px-8 py-32 text-center">
           <span className="text-6xl mb-6 block">🐾</span>
@@ -101,7 +103,7 @@ export default function ResgatePage() {
 
   return (
     <main className="bg-[#F9F7F2] min-h-screen font-sans">
-      <Navbar />
+      {isAuthenticated ? <PrivateHeader /> : <Navbar />}
       <div className="h-20" />
       <BackToHome />
 

@@ -2,7 +2,7 @@
 // ÚNICO tipo Pet do projeto — importar daqui em todos os componentes
 
 export type Pet = {
-  id: number;
+  id: string; // ← era number, backend usa cuid (string)
   name: string;
   image: string;
   type: 'dog' | 'cat';
@@ -14,4 +14,3 @@ export type Pet = {
   description: string;
   tags?: string[];
 };
-

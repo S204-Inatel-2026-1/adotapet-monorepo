@@ -21,7 +21,11 @@
     "test:integration": "jest --config ./test/jest-integration.json",
     "test:integration:report": "node scripts/generate-jest-html-report.js integration",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:e2e:report": "node scripts/generate-jest-html-report.js e2e"
+    "test:e2e:report": "node scripts/generate-jest-html-report.js e2e",
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -73,19 +77,13 @@
     "typescript-eslint": "^8.20.0"
   },
   "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
+    "moduleFileExtensions": ["js", "json", "ts"],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
+    "collectCoverageFrom": ["**/*.(t|j)s"],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
   }

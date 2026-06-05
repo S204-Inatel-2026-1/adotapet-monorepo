@@ -1,17 +1,21 @@
 describe('Fluxo de Autenticação e Proteção de Rotas', () => {
   beforeEach(() => {
-    // Limpa estado antes de cada teste
     cy.clearLocalStorage();
     cy.clearCookies();
 
-    // Mocks da API
     cy.intercept('POST', '/api-backend/auth/login', {
       statusCode: 200,
-      body: { 
-        access_token: 'fake-jwt-token',
-        user: { name: 'Lucas Teste', email: 'lucas@test.com', role: 'adopter' }
-      },
+      body: { access_token: 'fake-jwt-token' },
     }).as('loginRequest');
+
+    cy.intercept('GET', '/api-backend/users/*', {
+      statusCode: 200,
+      body: {
+        fullName: 'Lucas Teste',
+        email: 'lucas@test.com',
+        role: 'ADOPTER',
+      },
+    }).as('getUserRequest');
 
     cy.intercept('POST', '/api-backend/users', {
       statusCode: 201,
@@ -32,14 +36,12 @@ describe('Fluxo de Autenticação e Proteção de Rotas', () => {
     cy.get('button[type="submit"]').click();
 
     cy.wait('@loginRequest');
+    cy.wait('@getUserRequest');
 
-    // Agora redireciona para /dashboard
     cy.url().should('include', '/dashboard');
-    
-    // Verifica persistência tripla: Contexto (UI), LocalStorage e Cookies
-    // Regex para aceitar Bom dia, Boa tarde ou Boa noite
+
     cy.contains(/Bom dia|Boa tarde|Boa noite, Lucas!/).should('be.visible');
-    
+
     cy.window().then((win) => {
       expect(win.localStorage.getItem('adotapet_token')).to.eq('fake-jwt-token');
       expect(win.localStorage.getItem('adotapet_user')).to.contain('Lucas Teste');
@@ -49,7 +51,6 @@ describe('Fluxo de Autenticação e Proteção de Rotas', () => {
   });
 
   it('deve permitir acesso ao dashboard se já possuir cookie/token', () => {
-    // Simula usuário já logado
     cy.setCookie('adotapet_token', 'fake-jwt-token');
     cy.window().then((win) => {
       win.localStorage.setItem('adotapet_token', 'fake-jwt-token');
@@ -62,7 +63,6 @@ describe('Fluxo de Autenticação e Proteção de Rotas', () => {
   });
 
   it('deve realizar logout completo e remover acessos', () => {
-    // Login prévio
     cy.setCookie('adotapet_token', 'fake-jwt-token');
     cy.window().then((win) => {
       win.localStorage.setItem('adotapet_token', 'fake-jwt-token');
@@ -70,11 +70,7 @@ describe('Fluxo de Autenticação e Proteção de Rotas', () => {
     });
     cy.visit('/dashboard');
 
-    // Abre o menu de conta usando o aria-label (mais preciso que o texto 'Lucas' que aparece na saudação)
     cy.get('button[aria-label="Abrir menu do usuário"]').click();
-    
-    // Garante que o menu abriu e o botão de sair está visível
-    // Usamos regex i (case-insensitive) para ignorar o emoji e variações de maiúsculo/minúsculo
     cy.contains(/sair da conta/i).should('be.visible').click();
 
     cy.url().should('eq', Cypress.config().baseUrl + '/');
@@ -84,4 +80,3 @@ describe('Fluxo de Autenticação e Proteção de Rotas', () => {
     });
   });
 });
-

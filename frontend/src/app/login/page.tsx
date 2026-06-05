@@ -2,14 +2,15 @@
 
 import Link from "next/link"; // Trocamos o react-router pelo Next.js
 import { Heart, Mail, Lock, PawPrint } from "lucide-react";
+import { api } from '@/services/api';
+import { decodeJwtPayload, normalizeUser } from '@/services/api';
 
 // Importações da nossa "Tríade"
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { Input } from "@/components/ui/Input"; // O nosso componente bonitão!
-import { api } from "@/services/api";
+import { Input } from "@/components/ui/Input"; 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,9 +47,15 @@ export default function Login() {
         try {
             setError(null);
             const response = await api.login(data);
+            const token = response.access_token;
 
-            // Salva o token no localStorage e atualiza o estado global
-            login(response.access_token, response.user);
+            const payload = decodeJwtPayload(token);
+            const userId = payload?.sub;
+
+            const rawUser = await api.getUserById(userId);
+            const userData = normalizeUser(rawUser);
+
+            login(token, userData);
 
             // Redireciona para a home
             router.push('/dashboard');
