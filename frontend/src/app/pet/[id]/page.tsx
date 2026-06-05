@@ -67,10 +67,19 @@ export default function PetDetails() {
   }, [id]);
 
   const onSubmit = async (data: AdocaoForm) => {
-    // TODO (Lucas): conectar com POST /adoptions
-    await new Promise((r) => setTimeout(r, 1200));
-    console.log('Solicitação de adoção:', { petId: id, ...data });
-    setSubmitted(true);
+    try {
+      const message = `
+Motivação: ${data.motivation}
+Possui outros pets: ${data.hasOtherPets === 'yes' ? 'Sim' : 'Não'}
+Possui crianças: ${data.hasChildren === 'yes' ? 'Sim' : 'Não'}
+Tipo de moradia: ${data.housingType === 'house' ? 'Casa' : data.housingType === 'apartment' ? 'Apartamento' : 'Sítio/Fazenda'}
+      `.trim();
+
+      await api.createAdoption(String(id), message);
+      setSubmitted(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao enviar solicitação');
+    }
   };
 
   const inputClass = (hasError: boolean) =>

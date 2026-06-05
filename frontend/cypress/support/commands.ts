@@ -10,28 +10,26 @@
 // ***********************************************
 //
 //
-// -- This is a parent command --
-// Cypress.Commands.add('login', (email, password) => { ... })
-//
-//
-// -- This is a child command --
-// Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
-//
-// declare global {
-//   namespace Cypress {
-//     interface Chainable {
-//       login(email: string, password: string): Chainable<void>
-//       drag(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       dismiss(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       visit(originalFn: CommandOriginalFn, url: string, options: Partial<VisitOptions>): Chainable<Element>
-//     }
-//   }
-// }
+Cypress.Commands.add('login', (role: 'adopter' | 'ong' = 'adopter') => {
+  // Payload fake com ID para o teste de perfil
+  const payload = btoa(JSON.stringify({ sub: 'user-123', role: role.toUpperCase() }));
+  const token = `header.${payload}.signature`;
+  
+  const user = {
+    name: 'Lucas Teste',
+    email: 'lucas@test.com',
+    role: role
+  };
+
+  localStorage.setItem('adotapet_token', token);
+  localStorage.setItem('adotapet_user', JSON.stringify(user));
+  cy.setCookie('adotapet_token', token);
+});
+
+declare global {
+  namespace Cypress {
+    interface Chainable {
+      login(role?: 'adopter' | 'ong'): Chainable<void>
+    }
+  }
+}
