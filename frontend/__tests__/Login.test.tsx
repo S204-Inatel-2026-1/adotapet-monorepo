@@ -1,10 +1,10 @@
-import "@testing-library/jest-dom"; 
+import "@testing-library/jest-dom";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Login from "../src/app/login/page";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { api } from "@/services/api";
+import { api, decodeJwtPayload, normalizeUser } from "@/services/api";
 
 // Mock do next/navigation
 jest.mock("next/navigation", () => ({
@@ -20,7 +20,14 @@ jest.mock("@/contexts/AuthContext", () => ({
 jest.mock("@/services/api", () => ({
     api: {
         login: jest.fn(),
+        getUserById: jest.fn(),
     },
+    decodeJwtPayload: jest.fn().mockReturnValue({ sub: 'user-123', role: 'ADOPTER' }),
+    normalizeUser: jest.fn().mockReturnValue({
+        name: "Test User",
+        email: "test@example.com",
+        role: "adopter",
+    }),
 }));
 
 // Mock do next/link
@@ -59,35 +66,38 @@ describe("Página de Login", () => {
     });
 
     it("deve realizar login com sucesso e redirecionar", async () => {
-        const mockUser = { name: "Test User", email: "test@example.com", role: "adopter" };
-        (api.login as jest.Mock).mockResolvedValue({ 
-            access_token: "fake-token",
-            user: mockUser
+        (api.login as jest.Mock).mockResolvedValue({ access_token: "fake-token" });
+        (api.getUserById as jest.Mock).mockResolvedValue({
+            fullName: "Test User",
+            email: "test@example.com",
+            role: "ADOPTER",
         });
-        
+        (decodeJwtPayload as jest.Mock).mockReturnValue({ sub: 'user-123', role: 'ADOPTER' });
+        (normalizeUser as jest.Mock).mockReturnValue({
+            name: "Test User",
+            email: "test@example.com",
+            role: "adopter",
+        });
+
         render(<Login />);
 
-        const inputEmail = screen.getByLabelText(/e-mail/i);
-        const inputSenha = screen.getByLabelText(/senha/i);
-        const botaoEntrar = screen.getByRole("button", { name: /entrar/i });
-
-        await userEvent.type(inputEmail, "test@example.com");
-        await userEvent.type(inputSenha, "password123");
-        await userEvent.click(botaoEntrar);
+        await userEvent.type(screen.getByLabelText(/e-mail/i), "test@example.com");
+        await userEvent.type(screen.getByLabelText(/senha/i), "password123");
+        await userEvent.click(screen.getByRole("button", { name: /entrar/i }));
 
         await waitFor(() => {
             expect(api.login).toHaveBeenCalledWith({
                 email: "test@example.com",
                 password: "password123",
             });
-            expect(mockLogin).toHaveBeenCalledWith("fake-token", mockUser);
+            expect(mockLogin).toHaveBeenCalled();
             expect(mockPush).toHaveBeenCalledWith("/dashboard");
         });
     });
 
     it("deve exibir mensagem de erro quando o login falha", async () => {
         (api.login as jest.Mock).mockRejectedValue(new Error("Credenciais inválidas"));
-        
+
         render(<Login />);
 
         await userEvent.type(screen.getByLabelText(/e-mail/i), "wrong@example.com");

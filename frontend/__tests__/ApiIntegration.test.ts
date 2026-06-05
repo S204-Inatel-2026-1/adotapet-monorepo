@@ -5,24 +5,36 @@ describe('Integração com API', () => {
     const mockUser = { name: 'Lucas Teste', email: 'lucas@test.com', role: 'adopter' };
 
     beforeEach(() => {
-        // Limpa mocks e armazenamento
         jest.clearAllMocks();
         localStorage.clear();
-        
-        // Mock do fetch global
         global.fetch = jest.fn();
     });
 
     it('deve buscar pets com sucesso', async () => {
-        const mockPets = [{ id: 1, name: 'Thor' }];
+        const mockRawPets = [{
+            id: 'cuid123',
+            name: 'Thor',
+            species: 'DOG',
+            sex: 'MALE',
+            size: 'LARGE',
+            ageInMonths: 24,
+            city: 'Santa Rita do Sapucaí',
+            state: 'MG',
+            breed: 'Labrador',
+            description: 'Thor é um labrador',
+            photoUrl: '/pets/thor.jpg',
+        }];
+
         (global.fetch as jest.Mock).mockResolvedValueOnce({
             ok: true,
-            json: async () => mockPets,
+            json: async () => mockRawPets,
         });
 
         const pets = await api.getPets();
-        
-        expect(pets).toEqual(mockPets);
+
+        expect(pets[0].name).toBe('Thor');
+        expect(pets[0].type).toBe('dog');
+        expect(pets[0].age).toBe('2 anos');
         expect(global.fetch).toHaveBeenCalledWith(
             expect.stringContaining('/pets'),
             expect.objectContaining({
@@ -35,7 +47,7 @@ describe('Integração com API', () => {
 
     it('deve incluir o token de autorização se estiver logado', async () => {
         localStorage.setItem('adotapet_token', mockToken);
-        
+
         (global.fetch as jest.Mock).mockResolvedValueOnce({
             ok: true,
             json: async () => ({ success: true }),
@@ -55,8 +67,8 @@ describe('Integração com API', () => {
 
     it('deve realizar login e retornar o token', async () => {
         const loginData = { email: 'test@test.com', password: 'password' };
-        const mockResponse = { access_token: mockToken, user: mockUser };
-        
+        const mockResponse = { access_token: mockToken };
+
         (global.fetch as jest.Mock).mockResolvedValueOnce({
             ok: true,
             json: async () => mockResponse,
