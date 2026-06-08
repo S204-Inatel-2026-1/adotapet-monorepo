@@ -1,0 +1,14 @@
+{
+  "id": "pet-123",
+  "name": "Thor",
+  "photoUrl": "/pets/thor.jpg",
+  "species": "DOG",
+  "breed": "Vira-lata",
+  "sex": "MALE",
+  "ageInMonths": 24,
+  "size": "MEDIUM",
+  "city": "Santa Rita",
+  "state": "MG",
+  "description": "Um pet de teste muito legal",
+  "status": "AVAILABLE"
+}

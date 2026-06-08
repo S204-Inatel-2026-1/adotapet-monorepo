@@ -28,9 +28,6 @@ export function normalizeUser(raw: any): AuthUser {
   };
 }
 
-
-
-
 export function normalizePet(raw: any): Pet {
   // Converte ageInMonths para texto legível
   const ageMonths = raw.ageInMonths ?? 0;
@@ -76,13 +73,6 @@ export function normalizePet(raw: any): Pet {
   };
 }
 
-
-
-
-
-
-
-
 async function fetchClient(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('adotapet_token') : null;
 
@@ -106,6 +96,7 @@ async function fetchClient(endpoint: string, options: RequestInit = {}) {
   return response.json();
 }
 
+// Nosso serviço de API real (Adeus Mocks! 👋)
 export const api = {
   getPets: async (): Promise<Pet[]> => {
     const data = await fetchClient('/pets');
@@ -121,6 +112,20 @@ export const api = {
 
   getUserById: async (id: string | number) => {
     return fetchClient(`/users/${id}`);
+  },
+
+  // Atualizar dados do usuário
+  updateUser: async (id: string, userData: any) => {
+    return fetchClient(`/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        fullName: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        city: userData.city,
+        state: userData.state,
+      }),
+    });
   },
 
   login: async (credentials: any) => {
@@ -143,10 +148,21 @@ export const api = {
     });
   },
 
-  createAdoption: async (petId: number) => {
+  createAdoption: async (petId: string, message?: string) => {
     return fetchClient('/adoptions', {
       method: 'POST',
-      body: JSON.stringify({ petId }),
+      body: JSON.stringify({ petId, message }),
+    });
+  },
+
+  getMyAdoptions: async () => {
+    return fetchClient('/adoptions/my-requests');
+  },
+
+  // Assinar termo de responsabilidade
+  signResponsibilityTerm: async (adoptionRequestId: string) => {
+    return fetchClient(`/responsibility-terms/${adoptionRequestId}/sign`, {
+      method: 'POST',
     });
   },
 

@@ -5,8 +5,9 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { api, normalizeUser } from '@/services/api';
 import PrivateHeader from '@/components/layout/PrivateHeader';
 import BackButton from '@/components/ui/BackButton';
 
@@ -15,38 +16,72 @@ const perfilSchema = z.object({
   email: z.string().email('E-mail inválido'),
   phone: z.string().optional(),
   city: z.string().optional(),
+  state: z.string().optional(),
 });
 
 type PerfilForm = z.infer<typeof perfilSchema>;
 
 export default function PerfilPage() {
-  const { user } = useAuth();
+  const { user, login, loading: authLoading } = useAuth();
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<PerfilForm>({
     resolver: zodResolver(perfilSchema),
-    defaultValues: {
-      name: user?.name ?? '',
-      email: user?.email ?? '',
-    },
   });
 
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name || '',
+        email: user.email || '',
+        phone: '',
+        city: '',
+      });
+    }
+  }, [user, reset]);
+
   const onSubmit = async (data: PerfilForm) => {
-    // TODO (Lucas): conectar com PATCH /users/:id
-    await new Promise((r) => setTimeout(r, 1000));
-    console.log('Perfil atualizado:', data);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    try {
+      setError(null);
+      const token = localStorage.getItem('adotapet_token') || '';
+      
+      if (!token || token.split('.').length < 2) {
+        throw new Error('Sessão inválida. Por favor, faça login novamente.');
+      }
+
+      const payloadStr = token.split('.')[1];
+      const payload = JSON.parse(atob(payloadStr));
+      const userId = payload.sub;
+
+      const updatedUserRaw = await api.updateUser(userId, data);
+      
+      login(token, normalizeUser(updatedUserRaw));
+      
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar perfil');
+    }
   };
 
   const inputClass = (hasError: boolean) =>
     `w-full px-5 py-4 rounded-2xl bg-[#F9F7F2] outline-none font-medium transition-all focus:ring-2 focus:ring-[#F4C542] ${
       hasError ? 'ring-2 ring-red-400' : ''
     }`;
+
+  if (authLoading) {
+    return (
+      <main className="bg-[#F9F7F2] min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3A5B4F]"></div>
+      </main>
+    );
+  }
 
   return (
     <main className="bg-[#F9F7F2] min-h-screen font-sans">
@@ -64,6 +99,12 @@ export default function PerfilPage() {
           <h1 className="text-4xl font-black text-[#2C4A3E] mb-2">Meu Perfil</h1>
           <p className="text-gray-500">Gerencie suas informações pessoais.</p>
         </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-sm text-center">
+            {error}
+          </div>
+        )}
 
         {/* Avatar */}
         <div className="flex items-center gap-6 mb-10 bg-white p-6 rounded-[32px] border border-gray-100">
