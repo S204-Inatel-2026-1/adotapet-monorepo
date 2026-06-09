@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { api, normalizeUser } from '@/services/api';
 import PrivateHeader from '@/components/layout/PrivateHeader';
 import BackButton from '@/components/ui/BackButton';
+import OngHeader from '@/components/layout/OngHeader';
 
 const perfilSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -85,7 +86,7 @@ export default function PerfilPage() {
 
   return (
     <main className="bg-[#F9F7F2] min-h-screen font-sans">
-      <PrivateHeader />
+      <OngHeader />
       <div className="h-20" />
 
         <div className="max-w-4xl mx-auto px-8 py-12">
@@ -165,6 +166,12 @@ export default function PerfilPage() {
           </div>
         </form>
       </div>
+            {/* ── MINI FOOTER ── */}
+      <footer className="mt-12 border-t border-gray-100 py-6">
+        <p className="text-center text-xs text-gray-400 font-medium">
+          © {new Date().getFullYear()} AdotaPET. Todos os direitos reservados.
+        </p>
+      </footer>
     </main>
   );
 }
