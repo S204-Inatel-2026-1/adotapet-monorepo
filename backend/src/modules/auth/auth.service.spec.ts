@@ -56,9 +56,15 @@ describe('Servico de autenticacao', () => {
   it('deve retornar Unauthorized quando a senha estiver incorreta', async () => {
     usersServiceMock.findByEmailForAuth.mockResolvedValue({
       id: 'user-1',
+      fullName: 'Usuario Teste',
       email: 'usuario@teste.com',
+      phone: null,
       password: 'senha-hash',
       role: 'ADOPTER',
+      organizationId: null,
+      isActive: true,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     });
     (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
@@ -73,9 +79,15 @@ describe('Servico de autenticacao', () => {
   it('deve gerar token com sub e role quando o login for valido', async () => {
     usersServiceMock.findByEmailForAuth.mockResolvedValue({
       id: 'user-1',
+      fullName: 'Usuario Teste',
       email: 'usuario@teste.com',
+      phone: null,
       password: 'senha-hash',
       role: 'ADOPTER',
+      organizationId: null,
+      isActive: true,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     });
     (bcrypt.compare as jest.Mock).mockResolvedValue(true);
     jwtServiceMock.signAsync.mockResolvedValue('jwt-token');
@@ -88,7 +100,17 @@ describe('Servico de autenticacao', () => {
     expect(jwtServiceMock.signAsync).toHaveBeenCalledWith({
       sub: 'user-1',
       role: 'ADOPTER',
+      organizationId: null,
     });
-    expect(result).toEqual({ access_token: 'jwt-token' });
+    expect(result).toEqual({
+      access_token: 'jwt-token',
+      user: expect.objectContaining({
+        id: 'user-1',
+        fullName: 'Usuario Teste',
+        email: 'usuario@teste.com',
+        role: 'ADOPTER',
+        organizationId: null,
+      }),
+    });
   });
 });

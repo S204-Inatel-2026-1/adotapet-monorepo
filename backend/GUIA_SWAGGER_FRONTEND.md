@@ -23,7 +23,7 @@ Use sempre **Try it out** para testar localmente.
 
 ## 3. Fluxo mínimo para autenticar
 
-### Passo 1: Criar usuário
+### Passo 1: Criar usuário adotante
 
 - Seção `Users`
 - Endpoint `POST /users`
@@ -55,6 +55,32 @@ Exemplo:
 
 Copie o `access_token` retornado.
 
+### Fluxo alternativo: criar conta ONG
+
+Para testar o painel/fluxo de ONG, use:
+
+- Seção `Organizations`
+- Endpoint `POST /organizations/register`
+
+Exemplo:
+
+```json
+{
+  "fullName": "Responsavel ONG",
+  "email": "ong.local@adotapet.com",
+  "password": "Str0ng@Pass123",
+  "phone": "11999999999",
+  "legalName": "ONG Local LTDA",
+  "tradeName": "ONG Local",
+  "cnpj": "12345678000199",
+  "description": "ONG de teste para integracao local.",
+  "city": "Sao Paulo",
+  "state": "SP"
+}
+```
+
+Essa rota cria o usuario com papel `ONG_ADMIN`, cria a organizacao e vincula os dois por `organizationId`.
+
 ### Passo 3: Autorizar no Swagger
 
 - Clique em **Authorize** (topo da página)
@@ -75,6 +101,8 @@ Exemplos de rotas que exigem token:
 - `POST /pets`
 - `PATCH /pets/{id}`
 - `DELETE /pets/{id}`
+- `GET /organizations/me`
+- `PATCH /organizations/me`
 - Rotas de `Adoptions`
 
 Se o token estiver ausente ou inválido, a API retorna `401 Unauthorized`.
@@ -87,6 +115,8 @@ Se o token estiver ausente ou inválido, a API retorna `401 Unauthorized`.
 ## 6. Regras importantes para o Front
 
 - Não envie `registeredById` ao criar pet; o backend define pelo usuário autenticado.
+- Para usuarios `ONG_ADMIN`, o backend tambem vincula automaticamente o pet a organizacao do usuario.
+- Para consultar ou editar a organizacao da conta logada, prefira `GET /organizations/me` e `PATCH /organizations/me`.
 - Recursos com ownership só podem ser alterados pelo dono (`403 Forbidden` se não for dono).
 - Campos enum devem respeitar exatamente os valores documentados no Swagger.
 

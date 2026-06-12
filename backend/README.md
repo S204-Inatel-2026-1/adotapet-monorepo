@@ -27,7 +27,8 @@ O AdotaPet nasce com o objetivo de estruturar e centralizar o processo de adoç�
 - ✅ Setup inicial do backend concluído.
 - ✅ Prisma configurado e conectado ao MySQL via Docker.
 - ✅ Módulos Base: Pets, Usuários e ONGs implementados.
-- ✅ Segurança Avançada: Login (JWT + Bcrypt) e RBAC (Controle de Acesso por Papéis: ADMIN, NGO_ADMIN, ADOPTER).
+- ✅ Segurança Avançada: Login (JWT + Bcrypt) e RBAC (Controle de Acesso por Papéis: ADMIN, ONG_ADMIN, ADOPTER).
+- ✅ Conta ONG: cadastro de usuário ONG_ADMIN vinculado a uma organização via `organizationId`.
 - ✅ Upload de Arquivos: Imagens de Pets via Multer (preparado para Docker Volumes).
 - ✅ Adoções & Termos: Fluxo completo de match, transações de aprovação e assinatura digital com rastro de auditoria (IP/User-Agent).
 - ⏳ Próximos passos: Sistema de Denúncias e Resgates (Upload de mídia e geolocalização).
@@ -99,7 +100,7 @@ A documentação interativa da API fica em:
 
 ### Fluxo recomendado para o Front testar rotas protegidas
 
-1. Criar usuário em `Users -> POST /users`
+1. Criar usuário adotante em `Users -> POST /users`
 2. Fazer login em `Auth -> POST /auth/login`
 3. Copiar o `access_token` retornado
 4. Clicar em **Authorize** no topo do Swagger
@@ -107,11 +108,14 @@ A documentação interativa da API fica em:
    - `Bearer SEU_TOKEN`
 6. Executar rotas protegidas (ex.: `POST /pets`, `PATCH /pets/:id`, `POST /adoptions`)
 
+Para testar uma conta de ONG, use `Organizations -> POST /organizations/register`. Essa rota cria a organização, cria o usuário com papel `ONG_ADMIN` e vincula os dois automaticamente.
+
 ### Importante
 
 - O backend identifica o usuário pelo token JWT.
 - Em rotas com ownership, o usuário só pode alterar os próprios recursos.
 - O Frontend **não precisa enviar `registeredById`** ao criar pet; esse campo é preenchido no backend.
+- Quando o usuário autenticado é `ONG_ADMIN`, o backend também vincula automaticamente o pet à organização do usuário.
 
 ## Scripts Úteis
 

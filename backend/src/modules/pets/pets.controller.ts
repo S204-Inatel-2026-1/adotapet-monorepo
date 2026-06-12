@@ -41,7 +41,7 @@ export class PetsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new pet' })
   create(@Body() createPetDto: CreatePetDto, @CurrentUser() user: any) {
-    return this.petsService.create(createPetDto, user.id);
+    return this.petsService.create(createPetDto, user.id, user.organizationId);
   }
 
   @Post(':id/photo')

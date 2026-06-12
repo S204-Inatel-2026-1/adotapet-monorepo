@@ -26,10 +26,13 @@ type FindPetsFilters = {
 export class PetsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createPetDto: CreatePetDto, userId: string) {
+  create(createPetDto: CreatePetDto, userId: string, organizationId?: string | null) {
+    const petOrganizationId = organizationId ?? createPetDto.organizationId;
+
     return this.prisma.pet.create({
       data: {
         ...createPetDto,
+        organizationId: petOrganizationId,
         registeredById: userId,
       },
     });
