@@ -4,16 +4,14 @@
 // Lista de pets cadastrados pela ONG — dados mockados
 // TODO (Lucas): substituir mocks pelos endpoints reais
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import PrivateHeader from '@/components/layout/PrivateHeader';
-import Footer from '@/components/layout/Footer';
-import BackButton from '@/components/ui/BackButton';
+import { X } from 'lucide-react';
 import OngHeader from '@/components/layout/OngHeader';
+import BackButton from '@/components/ui/BackButton';
 
-// ─────────────────────────────────────────────
-// TIPOS
-// ─────────────────────────────────────────────
+// ─── Tipos ────────────────────────────────────────────────────────────────────
 
 type PetStatus = 'available' | 'pending' | 'adopted';
 
@@ -30,10 +28,8 @@ interface OngPet {
   tags?: string[];
 }
 
-// ─────────────────────────────────────────────
-// DADOS MOCKADOS
+// ─── Mock ─────────────────────────────────────────────────────────────────────
 // TODO (Lucas): GET /pets?registeredById=:userId
-// ─────────────────────────────────────────────
 
 const MOCK_PETS: OngPet[] = [
   {
@@ -74,27 +70,41 @@ const MOCK_PETS: OngPet[] = [
   },
 ];
 
-// ─────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const STATUS_MAP: Record<PetStatus, { label: string; color: string }> = {
-  available: { label: 'Disponível', color: 'bg-[#E8F0E6] text-[#2C4A3E]' },
-  pending: { label: 'Em análise', color: 'bg-[#F4C542]/20 text-[#2C4A3E]' },
-  adopted: { label: 'Adotado', color: 'bg-gray-100 text-gray-400' },
+  available: { label: 'Disponível',  color: 'bg-[#E8F0E6] text-[#2C4A3E]' },
+  pending:   { label: 'Em análise',  color: 'bg-[#F4C542]/20 text-[#2C4A3E]' },
+  adopted:   { label: 'Adotado',     color: 'bg-gray-100 text-gray-400' },
 };
 
 const SIZE_LABEL: Record<OngPet['size'], string> = {
-  small: 'Pequeno',
-  medium: 'Médio',
-  large: 'Grande',
+  small: 'Pequeno', medium: 'Médio', large: 'Grande',
 };
 
-// ─────────────────────────────────────────────
-// COMPONENTE
-// ─────────────────────────────────────────────
+// ─── Componente ───────────────────────────────────────────────────────────────
 
 export default function PainelPetsPage() {
+  const [pets, setPets] = useState<OngPet[]>(MOCK_PETS);
+  const [petToDelete, setPetToDelete] = useState<OngPet | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!petToDelete) return;
+    try {
+      setDeleting(true);
+      // TODO (Lucas): DELETE /pets/:petToDelete.id
+      console.log('Remover pet:', petToDelete.id);
+      await new Promise((r) => setTimeout(r, 600));
+      setPets((prev) => prev.filter((p) => p.id !== petToDelete.id));
+      setPetToDelete(null);
+    } catch (err) {
+      console.error('Erro ao remover pet', err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <main className="bg-[#F9F7F2] min-h-screen font-sans">
       <OngHeader />
@@ -102,17 +112,15 @@ export default function PainelPetsPage() {
 
       <div className="max-w-7xl mx-auto px-8 py-10">
 
-        {/* Navegação de volta */}
         <div className="mb-6">
           <BackButton href="/painel" label="Voltar ao painel" />
         </div>
 
-        {/* Cabeçalho */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-black text-[#2C4A3E]">Meus Pets</h1>
             <p className="text-gray-400 text-sm mt-1">
-              {MOCK_PETS.length} pet{MOCK_PETS.length !== 1 ? 's' : ''} cadastrado{MOCK_PETS.length !== 1 ? 's' : ''}
+              {pets.length} pet{pets.length !== 1 ? 's' : ''} cadastrado{pets.length !== 1 ? 's' : ''}
             </p>
           </div>
           <a
@@ -123,8 +131,7 @@ export default function PainelPetsPage() {
           </a>
         </div>
 
-        {/* Lista vazia */}
-        {MOCK_PETS.length === 0 ? (
+        {pets.length === 0 ? (
           <div className="bg-white rounded-[32px] p-20 text-center border border-gray-100 shadow-sm">
             <p className="text-5xl mb-4">🐾</p>
             <p className="font-bold text-[#2C4A3E] text-xl mb-2">Nenhum pet cadastrado ainda</p>
@@ -140,7 +147,7 @@ export default function PainelPetsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MOCK_PETS.map((pet) => {
+            {pets.map((pet) => {
               const petStatus = STATUS_MAP[pet.status];
               return (
                 <div
@@ -157,13 +164,11 @@ export default function PainelPetsPage() {
                       className="object-cover"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
-                    {/* Badge de status */}
                     <div className="absolute top-3 left-3">
                       <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${petStatus.color}`}>
                         {petStatus.label}
                       </span>
                     </div>
-                    {/* Badge de pedidos pendentes */}
                     {pet.pendingAdoptions > 0 && (
                       <div className="absolute top-3 right-3 bg-[#F4C542] text-[#2C4A3E] text-xs font-black px-3 py-1.5 rounded-full">
                         {pet.pendingAdoptions} pedido{pet.pendingAdoptions > 1 ? 's' : ''}
@@ -182,14 +187,10 @@ export default function PainelPetsPage() {
                       {pet.age} · {SIZE_LABEL[pet.size]}
                     </p>
 
-                    {/* Tags */}
                     {pet.tags && pet.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mb-4">
                         {pet.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-xs font-semibold bg-[#E8F0E6] text-[#2C4A3E] px-3 py-1 rounded-full"
-                          >
+                          <span key={tag} className="text-xs font-semibold bg-[#E8F0E6] text-[#2C4A3E] px-3 py-1 rounded-full">
                             {tag}
                           </span>
                         ))}
@@ -198,7 +199,6 @@ export default function PainelPetsPage() {
 
                     {/* Ações */}
                     <div className="flex gap-2 pt-3 border-t border-gray-50">
-                      {/* TODO (Lucas): navegar para /painel/pets/:id/editar */}
                       <a
                         href={`/painel/pets/${pet.id}/editar`}
                         data-testid="edit-pet-btn"
@@ -206,9 +206,9 @@ export default function PainelPetsPage() {
                       >
                         ✏️ Editar
                       </a>
-                      {/* TODO (Lucas): confirmar e chamar DELETE /pets/:id */}
                       <button
                         data-testid="delete-pet-btn"
+                        onClick={() => setPetToDelete(pet)}
                         className="flex-1 py-2.5 rounded-xl text-xs font-bold text-red-400 bg-red-50 hover:bg-red-100 transition-all"
                       >
                         🗑️ Remover
@@ -222,8 +222,55 @@ export default function PainelPetsPage() {
         )}
       </div>
 
-      <div className="h-20" />
-            {/* ── MINI FOOTER ── */}
+      {/* ── Modal de confirmação de remoção ── */}
+      {petToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="bg-white rounded-[32px] w-full max-w-sm shadow-2xl p-8">
+
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-black text-[#2C4A3E]">Remover pet</h2>
+              <button
+                onClick={() => setPetToDelete(null)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="size-5 text-gray-400" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-4 p-4 bg-[#F9F7F2] rounded-2xl mb-6">
+              <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0 relative">
+                <Image src={petToDelete.image} alt={petToDelete.name} fill className="object-cover" />
+              </div>
+              <div>
+                <p className="font-black text-[#2C4A3E]">{petToDelete.name}</p>
+                <p className="text-sm text-gray-400">{petToDelete.breed} · {SIZE_LABEL[petToDelete.size]}</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+              Tem certeza que deseja remover <strong className="text-[#2C4A3E]">{petToDelete.name}</strong>? Essa ação não pode ser desfeita e todas as solicitações de adoção vinculadas serão canceladas.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPetToDelete(null)}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-2xl border-2 border-gray-200 text-gray-500 font-bold hover:border-gray-300 transition-all text-sm disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-bold hover:bg-red-600 transition-all text-sm disabled:opacity-70"
+              >
+                {deleting ? 'Removendo...' : '🗑️ Remover'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <footer className="mt-12 border-t border-gray-100 py-6">
         <p className="text-center text-xs text-gray-400 font-medium">
           © {new Date().getFullYear()} AdotaPET. Todos os direitos reservados.

@@ -18,7 +18,7 @@ export function decodeJwtPayload(token: string): any {
 // Normaliza o retorno bruto do backend para o tipo AuthUser
 export function normalizeUser(raw: any): AuthUser {
   const rawRole = (raw?.role ?? raw?.tipo ?? 'adopter').toLowerCase();
-  const role: UserRole = rawRole === 'ong' ? 'ong' : 'adopter';
+  const role: UserRole = rawRole === 'ong_admin' ? 'ong' : 'adopter';
 
   return {
     name:   raw?.fullName ?? raw?.name ?? raw?.nome ?? raw?.username ?? 'Usuário',
