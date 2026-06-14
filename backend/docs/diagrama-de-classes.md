@@ -12,6 +12,7 @@ classDiagram
     String? phone
     UserRole role
     Boolean isActive
+    String? organizationId
     DateTime createdAt
     DateTime updatedAt
   }
@@ -102,6 +103,7 @@ classDiagram
   }
 
   User "1" --> "0..*" Pet : cadastra
+  Organization "0..1" --> "0..*" User : vincula
   Organization "0..1" --> "0..*" Pet : abriga
   User "1" --> "0..*" AdoptionRequest : solicita
   Pet "1" --> "0..*" AdoptionRequest : recebe

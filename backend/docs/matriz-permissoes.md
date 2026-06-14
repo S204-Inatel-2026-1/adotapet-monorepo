@@ -23,7 +23,7 @@ Este documento descreve o nivel de acesso das rotas atuais do backend AdotaPet.
 
 | Metodo | Rota | Acesso | Regra |
 | --- | --- | --- | --- |
-| POST | `/auth/login` | Publica | Autentica email e senha e retorna JWT |
+| POST | `/auth/login` | Publica | Autentica email e senha e retorna JWT com `organizationId` quando existir |
 
 ## Users
 
@@ -39,7 +39,7 @@ Este documento descreve o nivel de acesso das rotas atuais do backend AdotaPet.
 
 | Metodo | Rota | Acesso | Regra |
 | --- | --- | --- | --- |
-| POST | `/pets` | JWT | Cria pet vinculado ao usuario autenticado |
+| POST | `/pets` | JWT | Cria pet vinculado ao usuario autenticado e, se for `ONG_ADMIN`, a organizacao do usuario |
 | POST | `/pets/:id/photo` | JWT + Ownership | Apenas quem cadastrou o pet pode enviar foto |
 | GET | `/pets` | Publica | Lista pets com filtros opcionais |
 | GET | `/pets/:id` | Publica | Busca pet por id |
@@ -50,9 +50,12 @@ Este documento descreve o nivel de acesso das rotas atuais do backend AdotaPet.
 
 | Metodo | Rota | Acesso | Regra |
 | --- | --- | --- | --- |
+| POST | `/organizations/register` | Publica | Cria usuario `ONG_ADMIN`, organizacao e vinculo entre eles |
 | POST | `/organizations` | JWT + RBAC | Apenas `ADMIN` ou `ONG_ADMIN` |
 | GET | `/organizations` | Publica | Lista organizacoes |
+| GET | `/organizations/me` | JWT | Busca a organizacao vinculada ao usuario autenticado |
 | GET | `/organizations/:id` | Publica | Busca organizacao por id |
+| PATCH | `/organizations/me` | JWT | Atualiza a organizacao vinculada ao usuario autenticado |
 | PATCH | `/organizations/:id` | JWT + RBAC | Apenas `ADMIN` ou `ONG_ADMIN` |
 | DELETE | `/organizations/:id` | JWT + RBAC | Apenas `ADMIN` ou `ONG_ADMIN` |
 

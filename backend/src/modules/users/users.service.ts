@@ -16,6 +16,7 @@ export class UsersService {
     phone: true,
     role: true,
     isActive: true,
+    organizationId: true,
     createdAt: true,
     updatedAt: true,
   } satisfies Prisma.UserSelect;
