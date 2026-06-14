@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { api } from '@/services/api';
-import MinhasAdocoesPage from '@/app/minhas-adocoes/page';
+import MinhasAdocoesPage from '@/app/minhas-solicitacoes/page';
 
 // Mocks
 jest.mock('@/services/api');

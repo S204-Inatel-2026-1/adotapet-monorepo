@@ -58,7 +58,11 @@ export default function Login() {
             login(token, userData);
 
             // Redireciona para a home
-            router.push('/dashboard');
+            if (userData.role === 'ong') {
+                router.push('/painel');
+            } else {
+                router.push('/dashboard');
+            }
         } catch (err: any) {
             setError(err.message || 'E-mail ou senha inválidos');
             console.error("Erro no login:", err);

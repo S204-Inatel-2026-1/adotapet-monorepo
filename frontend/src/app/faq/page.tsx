@@ -8,6 +8,9 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import BackToHome from '@/components/ui/BackToHome';
 import Header from '@/components/layout/Header';
+import { useAuth } from '@/contexts/AuthContext';
+import OngHeader from '@/components/layout/OngHeader';
+import PrivateHeader from '@/components/layout/PrivateHeader';
 
 const categories = ['Todos', 'Adoção', 'Resgate', 'Cuidados', 'Conta/Login', 'ONGs parceiras'];
 
@@ -103,6 +106,9 @@ export default function FAQPage() {
   const [search, setSearch] = useState('');
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
+  const { user } = useAuth();
+  const isOng = user?.role === 'ong';
+
   const filtered = faqs.filter((faq) => {
     const matchesCategory = activeCategory === 'Todos' || faq.category === activeCategory;
     const matchesSearch =
@@ -113,7 +119,7 @@ export default function FAQPage() {
 
   return (
     <main className="bg-[#F9F7F2] min-h-screen font-sans">
-      <Header />
+      {isOng ? <OngHeader /> : <Header />}
       <div className="h-20" />
       <BackToHome />
 

@@ -117,8 +117,8 @@ export default function PrivateHeader() {
             label: '👤 Meu Perfil',
           },
           {
-            href: '/minhas-adocoes',
-            label: '🐾 Minhas Adoções',
+            href: '/minhas-solicitacoes',
+            label: '🐾 Minhas solicitações',
           },
           {
             href: '/faq',
