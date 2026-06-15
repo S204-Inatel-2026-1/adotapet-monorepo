@@ -8,13 +8,17 @@ jest.mock('@/services/api');
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
-jest.mock('@/components/layout/OngHeader', () => () => <div data-testid="ong-header" />);
+jest.mock('@/components/layout/OngHeader', () => {
+  const MockOngHeader = () => <div data-testid="ong-header" />;
+  MockOngHeader.displayName = 'OngHeader';
+  return MockOngHeader;
+});
 jest.mock('@/contexts/AuthContext', () => ({
   useAuth: jest.fn(() => ({
     user: { id: 'ong-1', name: 'ONG Teste', role: 'ong' },
     isAuthenticated: true,
   })),
-  AuthProvider: ({ children }: any) => <>{children}</>,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 const mockPets = [

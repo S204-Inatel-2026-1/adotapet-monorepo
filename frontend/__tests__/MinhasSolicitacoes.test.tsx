@@ -8,8 +8,16 @@ jest.mock('@/services/api');
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ back: jest.fn() }),
 }));
-jest.mock('@/components/layout/PrivateHeader', () => () => <div data-testid="private-header" />);
-jest.mock('@/components/ui/BackButton', () => ({ href, label }: any) => <button>{label}</button>);
+jest.mock('@/components/layout/PrivateHeader', () => {
+  const MockPrivateHeader = () => <div data-testid="private-header" />;
+  MockPrivateHeader.displayName = 'PrivateHeader';
+  return MockPrivateHeader;
+});
+jest.mock('@/components/ui/BackButton', () => {
+  const MockBackButton = ({ label }: { label: string }) => <button>{label}</button>;
+  MockBackButton.displayName = 'BackButton';
+  return MockBackButton;
+});
 
 const mockAdoptions = [
   {

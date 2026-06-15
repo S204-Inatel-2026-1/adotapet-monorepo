@@ -49,13 +49,10 @@ export default function ResgatePage() {
     formState: { errors, isSubmitting },
     reset,
     setValue,
-    watch,
   } = useForm<ResgateForm>({
     resolver: zodResolver(resgateSchema),
     defaultValues: { anonymous: false },
   });
-
-  const anonymous = watch('anonymous');
 
   const onSubmit = async (data: ResgateForm) => {
     await new Promise((r) => setTimeout(r, 1200));

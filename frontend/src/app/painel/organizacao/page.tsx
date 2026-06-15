@@ -72,8 +72,9 @@ export default function OrganizacaoPage() {
       setMessage(null);
       await api.updateOrganizationMe(data);
       setMessage({ type: 'success', text: 'Dados da organização atualizados com sucesso!' });
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Erro ao atualizar dados.' });
+    } catch (error) {
+      const err = error as Error;
+      setMessage({ type: 'error', text: err.message || 'Erro ao atualizar dados.' });
     } finally {
       setIsSaving(false);
     }

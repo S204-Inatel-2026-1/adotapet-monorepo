@@ -36,9 +36,9 @@ export default function Footer() {
         <div>
           <h4 className="font-bold text-[#2C4A3E] mb-6">Acesse rápido</h4>
           <ul className="text-gray-400 space-y-4 text-sm">
-            <li><a href="/#pets" className="hover:text-[#3A5B4F] transition-colors">Adotar</a></li>
-            <li><a href="/#como-funciona" className="hover:text-[#3A5B4F] transition-colors">Como Funciona</a></li>
-            <li><a href="/#ongs" className="hover:text-[#3A5B4F] transition-colors">ONGs</a></li>
+            <li><Link href="/#pets" className="hover:text-[#3A5B4F] transition-colors">Adotar</Link></li>
+            <li><Link href="/#como-funciona" className="hover:text-[#3A5B4F] transition-colors">Como Funciona</Link></li>
+            <li><Link href="/#ongs" className="hover:text-[#3A5B4F] transition-colors">ONGs</Link></li>
           </ul>
         </div>
 

@@ -40,21 +40,23 @@ const STATUS_MAP: Record<AdoptionStatus, { label: string; color: string; icon: s
   rejected: { label: 'Recusada', color: 'bg-red-50 text-red-500', icon: '❌' },
 };
 
-function normalizeAdoption(raw: any): Adoption {
+function normalizeAdoption(raw: Record<string, unknown>): Adoption {
+  const pet = raw.pet as Record<string, unknown> | undefined;
+  const user = raw.user as Record<string, unknown> | undefined;
   return {
-    id: raw.id,
-    petName: raw.pet?.name || 'Pet',
-    petImage: raw.pet?.photoUrl || '/pets/default.jpg',
-    requesterName: raw.user?.fullName || 'Usuário',
-    requesterEmail: raw.user?.email || '',
-    requesterPhone: raw.user?.phone || 'Não informado',
-    requestDate: new Date(raw.createdAt).toLocaleDateString('pt-BR'),
-    status: raw.status.toLowerCase() as AdoptionStatus,
-    motivation: raw.message || 'Sem mensagem adicional.',
+    id: raw.id as string,
+    petName: (pet?.name as string) || 'Pet',
+    petImage: (pet?.photoUrl as string) || '/pets/default.jpg',
+    requesterName: (user?.fullName as string) || 'Usuário',
+    requesterEmail: (user?.email as string) || '',
+    requesterPhone: (user?.phone as string) || 'Não informado',
+    requestDate: new Date(raw.createdAt as string).toLocaleDateString('pt-BR'),
+    status: (raw.status as string).toLowerCase() as AdoptionStatus,
+    motivation: (raw.message as string) || 'Sem mensagem adicional.',
     // Campos que podem não vir do backend simplificado, usamos default ou mock parcial
-    hasOtherPets: raw.hasOtherPets ?? false,
-    hasChildren: raw.hasChildren ?? false,
-    housingType: raw.housingType ?? 'Não informado',
+    hasOtherPets: (raw.hasOtherPets as boolean) ?? false,
+    hasChildren: (raw.hasChildren as boolean) ?? false,
+    housingType: (raw.housingType as string) ?? 'Não informado',
   };
 }
 
@@ -179,7 +181,7 @@ function AdoptionModal({
 
 export default function PainelAdocoesPage() {
   const [adoptions, setAdoptions] = useState<Adoption[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
   const [selected, setSelected] = useState<Adoption | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | AdoptionStatus>('all');
 
@@ -187,7 +189,7 @@ export default function PainelAdocoesPage() {
     try {
       setIsLoading(true);
       const data = await api.getReceivedAdoptions();
-      setAdoptions(data.map(normalizeAdoption));
+      setAdoptions(data.map((item: Record<string, unknown>) => normalizeAdoption(item)));
     } catch (error) {
       console.error('Erro ao buscar adoções:', error);
     } finally {
@@ -204,7 +206,7 @@ export default function PainelAdocoesPage() {
       await api.updateAdoptionStatus(id, 'APPROVED');
       setAdoptions((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'approved' as const } : a)));
       if (selected?.id === id) setSelected((prev) => prev ? { ...prev, status: 'approved' } : null);
-    } catch (error) {
+    } catch {
       alert('Erro ao aprovar adoção.');
     }
   };
@@ -214,7 +216,7 @@ export default function PainelAdocoesPage() {
       await api.updateAdoptionStatus(id, 'REJECTED');
       setAdoptions((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'rejected' as const } : a)));
       if (selected?.id === id) setSelected((prev) => prev ? { ...prev, status: 'rejected' } : null);
-    } catch (error) {
+    } catch {
       alert('Erro ao recusar adoção.');
     }
   };

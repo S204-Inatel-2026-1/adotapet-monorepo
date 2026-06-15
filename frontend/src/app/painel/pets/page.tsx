@@ -5,13 +5,13 @@
 // TODO (Lucas): substituir mocks pelos endpoints reais
 
 import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
-import { X, Search, Filter, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import OngHeader from '@/components/layout/OngHeader';
 import BackButton from '@/components/ui/BackButton';
 import { api } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { Pet } from '@/types/pets';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -57,7 +57,7 @@ export default function PainelPetsPage() {
     try {
       setIsLoading(true);
       const data = await api.getPets({ registeredById: user.id });
-      setPets(data.map((p: any) => ({
+      setPets(data.map((p: Pet) => ({
         id: p.id,
         name: p.name,
         image: p.image,
@@ -87,7 +87,7 @@ export default function PainelPetsPage() {
       await api.deletePet(petToDelete.id);
       setPets((prev) => prev.filter((p) => p.id !== petToDelete.id));
       setPetToDelete(null);
-    } catch (err) {
+    } catch {
       alert('Erro ao remover pet');
     } finally {
       setDeleting(false);

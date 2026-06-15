@@ -33,27 +33,41 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 //Provider
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [authState, setAuthState] = useState<{
+    isAuthenticated: boolean;
+    user: AuthUser | null;
+    loading: boolean;
+  }>({
+    isAuthenticated: false,
+    user: null,
+    loading: true,
+  });
 
   useEffect(() => {
-    // Verifica token e dados do usuário no localStorage ao carregar
-    const token = localStorage.getItem('adotapet_token');
-    const storedUser = localStorage.getItem('adotapet_user');
+    const initializeAuth = async () => {
+      // Verifica token e dados do usuário no localStorage ao carregar
+      const token = localStorage.getItem('adotapet_token');
+      const storedUser = localStorage.getItem('adotapet_user');
 
-    if (token && storedUser) {
-      try {
-        setIsAuthenticated(true);
-        setUser(JSON.parse(storedUser));
-      } catch {
-        // Dados corrompidos — limpa tudo
-        localStorage.removeItem('adotapet_token');
-        localStorage.removeItem('adotapet_user');
-        document.cookie = 'adotapet_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      if (token && storedUser) {
+        try {
+          setAuthState({
+            isAuthenticated: true,
+            user: JSON.parse(storedUser),
+            loading: false,
+          });
+          return;
+        } catch {
+          // Dados corrompidos — limpa tudo
+          localStorage.removeItem('adotapet_token');
+          localStorage.removeItem('adotapet_user');
+          document.cookie = 'adotapet_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        }
       }
-    }
-    setLoading(false);
+      setAuthState(prev => ({ ...prev, loading: false }));
+    };
+
+    initializeAuth();
   }, []);
 
   const login = (token: string, userData: AuthUser) => {
@@ -63,8 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Define cookie para o middleware funcionar (expira em 7 dias)
     document.cookie = `adotapet_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
 
-    setIsAuthenticated(true);
-    setUser(userData);
+    setAuthState({
+      isAuthenticated: true,
+      user: userData,
+      loading: false,
+    });
   };
 
   const logout = () => {
@@ -74,12 +91,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Remove cookie
     document.cookie = 'adotapet_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 
-    setIsAuthenticated(false);
-    setUser(null);
+    setAuthState({
+      isAuthenticated: false,
+      user: null,
+      loading: false,
+    });
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, loading }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated: authState.isAuthenticated, 
+      user: authState.user, 
+      login, 
+      logout, 
+      loading: authState.loading 
+    }}>
       {children}
     </AuthContext.Provider>
   );

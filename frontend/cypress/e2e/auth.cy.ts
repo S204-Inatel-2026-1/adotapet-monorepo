@@ -114,7 +114,7 @@ describe('Authentication and Route Protection - E2E', () => {
     cy.url().should('eq', Cypress.config().baseUrl + '/');
     cy.getCookie('adotapet_token').should('not.exist');
     cy.window().then((win) => {
-      expect(win.localStorage.getItem('adotapet_token')).to.be.null;
+      expect(win.localStorage.getItem('adotapet_token')).to.equal(null);
     });
   });
 });
