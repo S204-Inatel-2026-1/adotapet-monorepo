@@ -230,7 +230,7 @@ Tipo de moradia: ${data.housingType === 'house' ? 'Casa' : data.housingType === 
                 <p className="text-gray-500 mb-8">
                   Sua solicitação para adotar {pet.name} foi enviada. A ONG responsável irá analisar
                   e entrar em contato em breve. Acompanhe em{' '}
-                  <a href="/minhas-adocoes" className="text-[#3A5B4F] font-bold underline">
+                  <a href="/minhas-solicitacoes" className="text-[#3A5B4F] font-bold underline">
                     Minhas Adoções
                   </a>
                   .

@@ -98,13 +98,20 @@ function FormAdotante() {
   const onSubmit = async (data: AdotanteForm) => {
     try {
       setError(null);
-      // TODO (Lucas): chamar api.register(data) — POST /users com role: "ADOPTER"
+      await api.register({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        phone: data.phone,
+        role: 'ADOPTER'
+      });
       alert("Conta criada com sucesso! Você já pode fazer login.");
       router.push("/login");
     } catch (err: any) {
       setError(err.message || "Erro ao criar conta. Tente novamente.");
     }
   };
+
 
   const stateOptions = brazilianStates.map((s) => ({ value: s, label: s }));
 
@@ -245,8 +252,7 @@ function FormOng() {
   const onSubmit = async (data: OngForm) => {
     try {
       setError(null);
-      // TODO (Lucas): chamar api.registerOrganization(data) — POST /organizations/register
-      // O backend cria o usuário ONG_ADMIN, a organização e vincula pelo organizationId
+      await api.registerOrganization(data);
       alert("Conta da ONG criada com sucesso! Você já pode fazer login.");
       router.push("/login");
     } catch (err: any) {

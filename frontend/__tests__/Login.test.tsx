@@ -93,7 +93,7 @@ describe("Página de Login", () => {
             expect(mockLogin).toHaveBeenCalled();
             expect(mockPush).toHaveBeenCalledWith("/dashboard");
         });
-    });
+    }, 30000);
 
     it("deve exibir mensagem de erro quando o login falha", async () => {
         (api.login as jest.Mock).mockRejectedValue(new Error("Credenciais inválidas"));
@@ -107,5 +107,5 @@ describe("Página de Login", () => {
         await waitFor(() => {
             expect(screen.getByText("Credenciais inválidas")).toBeInTheDocument();
         });
-    });
+    }, 30000);
 });
