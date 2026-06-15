@@ -9,6 +9,7 @@ import { X, MapPin, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import OngHeader from '@/components/layout/OngHeader';
 import { api } from '@/services/api';
+import { Pet } from '@/types/pets';
 
 // ─────────────────────────────────────────────
 // HELPERS
@@ -47,6 +48,13 @@ const MOCK_RECENT_RESCUES = [
   },
 ];
 
+interface DashboardAdoption {
+  id: string;
+  petName: string;
+  requesterName: string;
+  status: string;
+}
+
 // ─────────────────────────────────────────────
 // COMPONENTE
 // ─────────────────────────────────────────────
@@ -62,9 +70,9 @@ export default function PainelPage() {
     newRescues: 2, // mock
   });
   
-  const [recentAdoptions, setRecentAdoptions] = useState<any[]>([]);
-  const [myPets, setMyPets] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [recentAdoptions, setRecentAdoptions] = useState<DashboardAdoption[]>([]);
+  const [myPets, setMyPets] = useState<Pet[]>([]);
+  const [, setIsLoading] = useState(true);
 
   const loadDashboardData = useCallback(async () => {
     if (!user?.id) return;
@@ -75,8 +83,8 @@ export default function PainelPage() {
         api.getReceivedAdoptions()
       ]);
 
-      const pending = adoptions.filter((a: any) => a.status === 'PENDING').length;
-      const approved = adoptions.filter((a: any) => a.status === 'APPROVED').length;
+      const pending = adoptions.filter((a: Record<string, unknown>) => a.status === 'PENDING').length;
+      const approved = adoptions.filter((a: Record<string, unknown>) => a.status === 'APPROVED').length;
 
       setStats({
         totalPets: pets.length,
@@ -88,12 +96,16 @@ export default function PainelPage() {
       setMyPets(pets.slice(0, 2));
 
       // Pega as 3 mais recentes
-      setRecentAdoptions(adoptions.slice(0, 3).map((a: any) => ({
-        id: a.id,
-        petName: a.pet?.name || 'Pet',
-        requesterName: a.user?.fullName || 'Usuário',
-        status: a.status.toLowerCase()
-      })));
+      setRecentAdoptions(adoptions.slice(0, 3).map((a: Record<string, unknown>) => {
+        const pet = a.pet as Record<string, unknown> | undefined;
+        const u = a.user as Record<string, unknown> | undefined;
+        return {
+          id: (a.id as string) || Math.random().toString(),
+          petName: (pet?.name as string) || 'Pet',
+          requesterName: (u?.fullName as string) || 'Usuário',
+          status: ((a.status as string) || 'pending').toLowerCase()
+        };
+      }));
 
     } catch (error) {
       console.error('Erro ao carregar dados do painel:', error);
@@ -167,7 +179,7 @@ export default function PainelPage() {
               {totalPets === 0 ? (
                 <p className="text-sm text-gray-400 italic">Nenhum pet cadastrado.</p>
               ) : (
-                myPets.map((pet: any) => (
+                myPets.map((pet: Pet) => (
                   <div key={pet.id} className="flex items-center gap-4 p-4 rounded-2xl bg-[#F9F7F2]">
                     <span className="text-2xl">{pet.type === 'dog' ? '🐶' : '🐱'}</span>
                     <div className="flex-1">

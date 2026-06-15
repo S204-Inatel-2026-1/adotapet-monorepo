@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Heart, Camera, Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
 import OngHeader from '@/components/layout/OngHeader';
 import Footer from '@/components/layout/Footer';
 import BackButton from '@/components/ui/BackButton';
@@ -24,10 +23,7 @@ const novoPetSchema = z.object({
   species: z.enum(['DOG', 'CAT', 'OTHER'], { error: 'Espécie é obrigatória' }),
   sex: z.enum(['MALE', 'FEMALE'], { error: 'Selecione o sexo' }),
   breed: z.string().optional(),
-  ageInMonths: z.preprocess(
-    (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
-    z.number({ error: 'Informe a idade' }).min(0, 'Idade inválida').max(300, 'Idade inválida')
-  ),
+  ageInMonths: z.number().min(0, 'Idade inválida').max(300, 'Idade inválida'),
   size: z.enum(['SMALL', 'MEDIUM', 'LARGE'], { error: 'Selecione o porte' }),
   description: z.string().min(10, 'Descreva o pet com pelo menos 10 caracteres'),
   city: z.string().min(2, 'Informe a cidade'),
@@ -75,9 +71,8 @@ export default function NovoPetPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = useForm<NovoPetForm, any, NovoPetForm>({
-    resolver: zodResolver(novoPetSchema) as any,
+  } = useForm<NovoPetForm>({
+    resolver: zodResolver(novoPetSchema),
     defaultValues: {
       vaccinated: false,
       neutered: false,
@@ -96,7 +91,7 @@ export default function NovoPetPage() {
       }
 
       setSubmitted(true);
-    } catch (err) {
+    } catch {
       alert('Erro ao cadastrar pet. Tente novamente.');
     }
   };
@@ -277,7 +272,7 @@ export default function NovoPetPage() {
                   type="number"
                   placeholder="Ex: 12"
                   min={0}
-                  {...register('ageInMonths')}
+                  {...register('ageInMonths', { valueAsNumber: true })}
                   className={inputClass(!!errors.ageInMonths)}
                 />
                 {errors.ageInMonths && (

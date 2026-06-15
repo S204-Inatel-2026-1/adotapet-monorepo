@@ -19,10 +19,7 @@ const editarPetSchema = z.object({
   species: z.enum(['DOG', 'CAT', 'OTHER'], { error: 'Espécie é obrigatória' }),
   sex: z.enum(['MALE', 'FEMALE'], { error: 'Selecione o sexo' }),
   breed: z.string().optional(),
-  ageInMonths: z.preprocess(
-    (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
-    z.number({ error: 'Informe a idade' }).min(0).max(300)
-  ),
+  ageInMonths: z.number().min(0).max(300),
   size: z.enum(['SMALL', 'MEDIUM', 'LARGE'], { error: 'Selecione o porte' }),
   description: z.string().min(10, 'Descreva o pet com pelo menos 10 caracteres'),
   city: z.string().min(2, 'Informe a cidade'),
@@ -69,7 +66,7 @@ export default function EditarPetPage() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<EditarPetForm>({
-    resolver: zodResolver(editarPetSchema) as any,
+    resolver: zodResolver(editarPetSchema),
   });
 
   // Pré-preenche o formulário com os dados do pet
@@ -81,11 +78,11 @@ export default function EditarPetPage() {
         const pet = await api.getPetById(petId);
         reset({
           name:        pet.name,
-          species:     pet.type.toUpperCase() as any,
-          sex:         pet.gender.toUpperCase() as any,
+          species:     pet.type.toUpperCase() as 'DOG' | 'CAT' | 'OTHER',
+          sex:         pet.gender.toUpperCase() as 'MALE' | 'FEMALE',
           breed:       pet.breed,
           ageInMonths: 24, // Backend simplificado
-          size:        pet.size.toUpperCase() as any,
+          size:        pet.size.toUpperCase() as 'SMALL' | 'MEDIUM' | 'LARGE',
           description: pet.description,
           city:        pet.location.split(' – ')[0],
           state:       pet.location.split(' – ')[1] || 'MG',
@@ -111,9 +108,7 @@ export default function EditarPetPage() {
       });
 
       if (selectedFile) {
-        // petId pode ser string uuid ou number. O backend espera o tipo correto.
-        const idToUpload = isNaN(Number(petId)) ? petId : Number(petId);
-        await api.uploadPetPhoto(idToUpload as any, selectedFile);
+        await api.uploadPetPhoto(petId, selectedFile);
       }
 
       setSaved(true);
@@ -121,7 +116,7 @@ export default function EditarPetPage() {
         setSaved(false);
         router.push('/painel/pets');
       }, 1500);
-    } catch (err) {
+    } catch {
       alert('Erro ao atualizar pet.');
     }
   };
@@ -237,7 +232,7 @@ export default function EditarPetPage() {
               </div>
               <div>
                 <label htmlFor="ageInMonths" className={labelClass}>Idade (em meses)</label>
-                <input id="ageInMonths" type="number" min={0} {...register('ageInMonths')} className={inputClass(!!errors.ageInMonths)} />
+                <input id="ageInMonths" type="number" min={0} {...register('ageInMonths', { valueAsNumber: true })} className={inputClass(!!errors.ageInMonths)} />
                 {errors.ageInMonths && <p className="text-xs text-red-500 mt-1">{errors.ageInMonths.message}</p>}
               </div>
             </div>

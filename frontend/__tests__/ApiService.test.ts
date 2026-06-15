@@ -27,6 +27,7 @@ describe('API Service - Unit Tests', () => {
       const rawUser = { fullName: 'Lucas Teste', email: 'l@t.com', role: 'ADOPTER' };
       const normalized = normalizeUser(rawUser);
       expect(normalized).toEqual({
+        id: '',
         name: 'Lucas Teste',
         email: 'l@t.com',
         role: 'adopter',
