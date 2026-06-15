@@ -98,8 +98,12 @@ async function fetchClient(endpoint: string, options: RequestInit = {}) {
 
 // Nosso serviço de API real (Adeus Mocks! 👋)
 export const api = {
-  getPets: async (): Promise<Pet[]> => {
-    const data = await fetchClient('/pets');
+  getPets: async (filters?: { registeredById?: string | number }): Promise<Pet[]> => {
+    let endpoint = '/pets';
+    if (filters?.registeredById) {
+      endpoint += `?registeredById=${filters.registeredById}`;
+    }
+    const data = await fetchClient(endpoint);
     // Backend pode retornar array direto ou { data: [...] }
     const list = Array.isArray(data) ? data : data.data ?? data.pets ?? [];
     return list.map(normalizePet);
@@ -108,6 +112,20 @@ export const api = {
   getPetById: async (id: number | string): Promise<Pet> => {
     const data = await fetchClient(`/pets/${id}`);
     return normalizePet(data);
+  },
+
+  createPet: async (petData: any) => {
+    return fetchClient('/pets', {
+      method: 'POST',
+      body: JSON.stringify(petData),
+    });
+  },
+
+  updatePet: async (id: string | number, petData: any) => {
+    return fetchClient(`/pets/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(petData),
+    });
   },
 
   getUserById: async (id: string | number) => {
@@ -128,6 +146,19 @@ export const api = {
     });
   },
 
+  changePassword: async (id: string, password: string) => {
+    return fetchClient(`/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ password }),
+    });
+  },
+
+  deleteAccount: async (id: string) => {
+    return fetchClient(`/users/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
   login: async (credentials: any) => {
     return fetchClient('/auth/login', {
       method: 'POST',
@@ -143,8 +174,48 @@ export const api = {
         email:    userData.email,
         password: userData.password,
         phone:    userData.phone,
-        role:     'ADOPTER',
+        role:     userData.role ?? 'ADOPTER',
       }),
+    });
+  },
+
+  registerOrganization: async (data: any) => {
+    return fetchClient('/organizations/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        fullName:    data.fullName,
+        email:       data.email,
+        password:    data.password,
+        phone:       data.phone,
+        legalName:   data.legalName,
+        tradeName:   data.tradeName,
+        cnpj:        data.cnpj?.replace(/\D/g, ''),
+        description: data.description,
+        city:        data.city,
+        state:       data.state,
+      }),
+    });
+  },
+
+  getOrganizationMe: async () => {
+    return fetchClient('/organizations/me');
+  },
+
+  updateOrganizationMe: async (data: any) => {
+    return fetchClient('/organizations/me', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  getReceivedAdoptions: async () => {
+    return fetchClient('/adoptions/received');
+  },
+
+  updateAdoptionStatus: async (id: string, status: 'APPROVED' | 'REJECTED') => {
+    return fetchClient(`/adoptions/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
     });
   },
 
@@ -163,6 +234,12 @@ export const api = {
   signResponsibilityTerm: async (adoptionRequestId: string) => {
     return fetchClient(`/responsibility-terms/${adoptionRequestId}/sign`, {
       method: 'POST',
+    });
+  },
+
+  deletePet: async (id: string | number) => {
+    return fetchClient(`/pets/${id}`, {
+      method: 'DELETE',
     });
   },
 

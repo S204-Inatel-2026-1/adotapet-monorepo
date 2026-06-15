@@ -11,6 +11,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 export type UserRole = 'adopter' | 'ong';
 
 export interface AuthUser {
+  id: string | number;
   name: string;
   email: string;
   role: UserRole;
