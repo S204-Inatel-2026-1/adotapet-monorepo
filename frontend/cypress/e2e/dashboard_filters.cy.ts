@@ -5,7 +5,7 @@ describe('Dashboard Filters - E2E', () => {
     cy.viewport('macbook-15');
 
     // Mocks de Pets
-    cy.intercept('GET', '**/pets', {
+    cy.intercept('GET', '**/api-backend/pets', {
       body: [
         {
           id: '1',
