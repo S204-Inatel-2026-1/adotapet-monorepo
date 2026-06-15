@@ -9,11 +9,16 @@ const createJestConfig = nextJest({
 const config: Config = {
     coverageProvider: 'v8',
     testEnvironment: 'jsdom',
-    // Vamos dizer ao Jest para carregar um ficheiro de preparação antes dos testes
     setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
     },
+    collectCoverageFrom: [
+        'src/**/*.{js,jsx,ts,tsx}',
+        '!src/**/*.d.ts',
+        '!src/**/index.{js,ts}',
+        '!src/app/layout.tsx',
+    ],
 }
 
 // Exporta a configuração para o Next.js a processar
