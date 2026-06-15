@@ -1,8 +1,7 @@
 'use client';
 
 // src/app/painel/pets/[id]/editar/page.tsx
-// Formulário de edição de pet — dados mockados pré-preenchidos
-// TODO (Lucas): buscar pet real com GET /pets/:id e salvar com PATCH /pets/:id
+// Formulário de edição de pet
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -11,6 +10,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import OngHeader from '@/components/layout/OngHeader';
 import BackButton from '@/components/ui/BackButton';
+import { api } from '@/services/api';
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
 
@@ -42,57 +42,6 @@ const STATES = [
   'RS','RO','RR','SC','SP','SE','TO',
 ];
 
-// ─── Mock de pets para pré-preenchimento ─────────────────────────────────────
-// TODO (Lucas): substituir por GET /pets/:id
-
-const MOCK_PETS: Record<string, Partial<EditarPetForm> & { photoUrl?: string }> = {
-  'pet-1': {
-    name: 'Thor',
-    species: 'DOG',
-    sex: 'MALE',
-    breed: 'Labrador',
-    ageInMonths: 24,
-    size: 'LARGE',
-    description: 'Thor é um labrador carinhoso e cheio de energia. Adora brincar e é ótimo com crianças.',
-    city: 'Santa Rita do Sapucaí',
-    state: 'MG',
-    vaccinated: true,
-    neutered: false,
-    tags: 'Amigável, Brincalhão',
-    photoUrl: '/pets/thor.jpg',
-  },
-  'pet-2': {
-    name: 'Nina',
-    species: 'CAT',
-    sex: 'FEMALE',
-    breed: 'Siamês',
-    ageInMonths: 12,
-    size: 'SMALL',
-    description: 'Nina é uma gatinha tímida mas muito carinhosa com quem ela confia.',
-    city: 'Santa Rita do Sapucaí',
-    state: 'MG',
-    vaccinated: true,
-    neutered: true,
-    tags: 'Tímida, Carinhosa',
-    photoUrl: '/pets/nina.webp',
-  },
-  'pet-3': {
-    name: 'Max',
-    species: 'DOG',
-    sex: 'MALE',
-    breed: 'Vira-lata',
-    ageInMonths: 36,
-    size: 'MEDIUM',
-    description: 'Max é curioso e inteligente. Aprende comandos rapidamente.',
-    city: 'Santa Rita do Sapucaí',
-    state: 'MG',
-    vaccinated: false,
-    neutered: true,
-    tags: 'Curioso, Inteligente',
-    photoUrl: '/pets/max.webp',
-  },
-};
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const inputClass = (hasError: boolean) =>
@@ -111,6 +60,7 @@ export default function EditarPetPage() {
 
   const [saved, setSaved] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
 
   const {
@@ -124,38 +74,56 @@ export default function EditarPetPage() {
 
   // Pré-preenche o formulário com os dados do pet
   useEffect(() => {
-    // TODO (Lucas): substituir por await api.getPetById(petId)
-    const pet = MOCK_PETS[petId];
-    if (pet) {
-      reset({
-        name:        pet.name,
-        species:     pet.species,
-        sex:         pet.sex,
-        breed:       pet.breed,
-        ageInMonths: pet.ageInMonths,
-        size:        pet.size,
-        description: pet.description,
-        city:        pet.city,
-        state:       pet.state,
-        vaccinated:  pet.vaccinated,
-        neutered:    pet.neutered,
-        tags:        pet.tags,
-      });
-      if (pet.photoUrl) setPhotoPreview(pet.photoUrl);
+    async function loadPet() {
+      if (!petId) return;
+      try {
+        setLoading(true);
+        const pet = await api.getPetById(petId);
+        reset({
+          name:        pet.name,
+          species:     pet.type.toUpperCase() as any,
+          sex:         pet.gender.toUpperCase() as any,
+          breed:       pet.breed,
+          ageInMonths: 24, // Backend simplificado
+          size:        pet.size.toUpperCase() as any,
+          description: pet.description,
+          city:        pet.location.split(' – ')[0],
+          state:       pet.location.split(' – ')[1] || 'MG',
+          vaccinated:  true,
+          neutered:    true,
+          tags:        pet.tags?.join(', '),
+        });
+        if (pet.image) setPhotoPreview(pet.image);
+      } catch (err) {
+        console.error('Erro ao carregar pet:', err);
+      } finally {
+        setLoading(false);
+      }
     }
-    setLoading(false);
+    loadPet();
   }, [petId, reset]);
 
   const onSubmit = async (data: EditarPetForm) => {
-    // TODO (Lucas): PATCH /pets/:id com os dados abaixo
-    // Se houver nova foto: POST /pets/:id/photo (multipart/form-data, campo 'file')
-    console.log('Dados atualizados:', data);
-    await new Promise((r) => setTimeout(r, 800));
-    setSaved(true);
-    setTimeout(() => {
-      setSaved(false);
-      router.push('/painel/pets');
-    }, 1500);
+    try {
+      await api.updatePet(petId, {
+        ...data,
+        ageInMonths: Number(data.ageInMonths),
+      });
+
+      if (selectedFile) {
+        // petId pode ser string uuid ou number. O backend espera o tipo correto.
+        const idToUpload = isNaN(Number(petId)) ? petId : Number(petId);
+        await api.uploadPetPhoto(idToUpload as any, selectedFile);
+      }
+
+      setSaved(true);
+      setTimeout(() => {
+        setSaved(false);
+        router.push('/painel/pets');
+      }, 1500);
+    } catch (err) {
+      alert('Erro ao atualizar pet.');
+    }
   };
 
   if (loading) {
@@ -196,6 +164,7 @@ export default function EditarPetPage() {
             <div className="flex items-center gap-6">
               <div className="w-28 h-28 rounded-2xl bg-[#F9F7F2] border-2 border-dashed border-[#E8F0E6] flex items-center justify-center overflow-hidden flex-shrink-0">
                 {photoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-4xl">🐾</span>
@@ -204,16 +173,19 @@ export default function EditarPetPage() {
               <div className="flex-1">
                 <p className="text-sm font-medium text-[#2C4A3E] mb-1">Alterar foto</p>
                 <p className="text-xs text-gray-400 mb-3">JPG, PNG ou WEBP. Máximo 5MB.</p>
-                {/* TODO (Lucas): capturar arquivo e enviar via POST /pets/:id/photo */}
-                <label className="cursor-pointer bg-[#E8F0E6] text-[#3A5B4F] font-bold px-5 py-2.5 rounded-2xl hover:bg-[#d4e4d0] transition-all text-xs inline-block">
+                <label htmlFor="photo-upload" className="cursor-pointer bg-[#E8F0E6] text-[#3A5B4F] font-bold px-5 py-2.5 rounded-2xl hover:bg-[#d4e4d0] transition-all text-xs inline-block">
                   Escolher foto
                   <input
+                    id="photo-upload"
                     type="file"
                     accept="image/*"
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) setPhotoPreview(URL.createObjectURL(file));
+                      if (file) {
+                        setSelectedFile(file);
+                        setPhotoPreview(URL.createObjectURL(file));
+                      }
                     }}
                   />
                 </label>
@@ -226,14 +198,14 @@ export default function EditarPetPage() {
             <h2 className="text-lg font-black text-[#2C4A3E] mb-1">Informações básicas</h2>
 
             <div>
-              <label className={labelClass}>Nome do pet</label>
-              <input type="text" {...register('name')} className={inputClass(!!errors.name)} />
+              <label htmlFor="name" className={labelClass}>Nome do pet</label>
+              <input id="name" type="text" {...register('name')} className={inputClass(!!errors.name)} />
               {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
             </div>
 
             <div>
-              <label className={labelClass}>Espécie</label>
-              <select {...register('species')} className={inputClass(!!errors.species)}>
+              <label htmlFor="species" className={labelClass}>Espécie</label>
+              <select id="species" {...register('species')} className={inputClass(!!errors.species)}>
                 <option value="">Selecione a espécie</option>
                 <option value="DOG">Cachorro</option>
                 <option value="CAT">Gato</option>
@@ -245,9 +217,12 @@ export default function EditarPetPage() {
             <div>
               <label className={labelClass}>Sexo</label>
               <div className="flex gap-4">
-                {[{ value: 'MALE', label: '♂ Macho' }, { value: 'FEMALE', label: '♀ Fêmea' }].map((opt) => (
-                  <label key={opt.value} className="flex items-center gap-3 bg-[#F9F7F2] px-5 py-4 rounded-2xl cursor-pointer hover:bg-[#E8F0E6] transition-all flex-1">
-                    <input type="radio" value={opt.value} {...register('sex')} className="accent-[#3A5B4F] w-4 h-4" />
+                {[
+                  { value: 'MALE', label: '♂ Macho', id: 'sex-male' },
+                  { value: 'FEMALE', label: '♀ Fêmea', id: 'sex-female' }
+                ].map((opt) => (
+                  <label key={opt.value} htmlFor={opt.id} className="flex items-center gap-3 bg-[#F9F7F2] px-5 py-4 rounded-2xl cursor-pointer hover:bg-[#E8F0E6] transition-all flex-1">
+                    <input id={opt.id} type="radio" value={opt.value} {...register('sex')} className="accent-[#3A5B4F] w-4 h-4" />
                     <span className="font-bold text-[#2C4A3E] text-sm">{opt.label}</span>
                   </label>
                 ))}
@@ -257,19 +232,19 @@ export default function EditarPetPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Raça (opcional)</label>
-                <input type="text" placeholder="Ex: Labrador" {...register('breed')} className={inputClass(false)} />
+                <label htmlFor="breed" className={labelClass}>Raça (opcional)</label>
+                <input id="breed" type="text" placeholder="Ex: Labrador" {...register('breed')} className={inputClass(false)} />
               </div>
               <div>
-                <label className={labelClass}>Idade (em meses)</label>
-                <input type="number" min={0} {...register('ageInMonths')} className={inputClass(!!errors.ageInMonths)} />
+                <label htmlFor="ageInMonths" className={labelClass}>Idade (em meses)</label>
+                <input id="ageInMonths" type="number" min={0} {...register('ageInMonths')} className={inputClass(!!errors.ageInMonths)} />
                 {errors.ageInMonths && <p className="text-xs text-red-500 mt-1">{errors.ageInMonths.message}</p>}
               </div>
             </div>
 
             <div>
-              <label className={labelClass}>Porte</label>
-              <select {...register('size')} className={inputClass(!!errors.size)}>
+              <label htmlFor="size" className={labelClass}>Porte</label>
+              <select id="size" {...register('size')} className={inputClass(!!errors.size)}>
                 <option value="">Selecione o porte</option>
                 <option value="SMALL">Pequeno</option>
                 <option value="MEDIUM">Médio</option>
@@ -279,8 +254,9 @@ export default function EditarPetPage() {
             </div>
 
             <div>
-              <label className={labelClass}>Descrição</label>
+              <label htmlFor="description" className={labelClass}>Descrição</label>
               <textarea
+                id="description"
                 rows={4}
                 placeholder="Conte sobre a personalidade, histórico e necessidades do pet..."
                 {...register('description')}
@@ -295,13 +271,13 @@ export default function EditarPetPage() {
             <h2 className="text-lg font-black text-[#2C4A3E] mb-1">Localização</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Cidade</label>
-                <input type="text" {...register('city')} className={inputClass(!!errors.city)} />
+                <label htmlFor="city" className={labelClass}>Cidade</label>
+                <input id="city" type="text" {...register('city')} className={inputClass(!!errors.city)} />
                 {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city.message}</p>}
               </div>
               <div>
-                <label className={labelClass}>Estado</label>
-                <select {...register('state')} className={inputClass(!!errors.state)}>
+                <label htmlFor="state" className={labelClass}>Estado</label>
+                <select id="state" {...register('state')} className={inputClass(!!errors.state)}>
                   <option value="">UF</option>
                   {STATES.map((uf) => (
                     <option key={uf} value={uf}>{uf}</option>
