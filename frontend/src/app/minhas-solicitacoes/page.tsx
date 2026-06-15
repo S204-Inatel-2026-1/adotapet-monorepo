@@ -1,6 +1,6 @@
 'use client';
 
-// src/app/minhas-adocoes/page.tsx
+// src/app/minhas-solicitacoes/page.tsx
 
 import { useState, useEffect } from 'react';
 import { api } from '@/services/api';
@@ -57,51 +57,7 @@ function getRescueStep(status: string): number {
   return 0;
 }
 
-// ─── Mock de dados ────────────────────────────────────────────────────────────
-// TODO (Lucas): remover mocks e buscar dados reais
-// - adoções: GET /adoptions/my-requests
-// - resgates: GET /rescue-help-requests (quando endpoint estiver disponível)
-
-const MOCK_ADOPTIONS = [
-  {
-    id: 'adoc-1',
-    type: 'adoption' as const,
-    status: 'PENDING',
-    createdAt: '2026-06-01T10:00:00Z',
-    message: 'Tenho experiência com cães e moro em casa com quintal.',
-    pet: {
-      name: 'Thor',
-      breed: 'Labrador',
-      photoUrl: '/pets/thor.jpg',
-      species: 'DOG',
-      age: '2 anos',
-      size: 'LARGE',
-      sex: 'MALE',
-      city: 'Santa Rita do Sapucaí',
-      state: 'MG',
-      description: 'Thor é um labrador carinhoso e cheio de energia.',
-    },
-  },
-  {
-    id: 'adoc-2',
-    type: 'adoption' as const,
-    status: 'APPROVED',
-    createdAt: '2026-05-20T14:30:00Z',
-    message: 'Adoro gatos e tenho muito espaço em casa.',
-    pet: {
-      name: 'Luna',
-      breed: 'SRD',
-      photoUrl: '/pets/luna.jpg',
-      species: 'CAT',
-      age: '1 ano',
-      size: 'SMALL',
-      sex: 'FEMALE',
-      city: 'Pouso Alegre',
-      state: 'MG',
-      description: 'Luna é uma gatinha tranquila e afetuosa.',
-    },
-  },
-];
+// ─── Mock de resgate (Resgate ainda não tem API) ───────────────────────────────
 
 const MOCK_RESCUES = [
   {
@@ -131,7 +87,7 @@ const MOCK_RESCUES = [
 // ─── Modal de Adoção ─────────────────────────────────────────────────────────
 
 function AdoptionModal({ adoption, onClose, onSignTerm }: {
-  adoption: typeof MOCK_ADOPTIONS[0];
+  adoption: any;
   onClose: () => void;
   onSignTerm: (id: string) => void;
 }) {
@@ -393,17 +349,29 @@ type Item =
   | (typeof MOCK_RESCUES[0]   & { type: 'rescue'   });
 
 export default function MinhasSolicitacoesPage() {
-  // TODO (Lucas): substituir por dados reais
-  // adoções: await api.getMyAdoptions()
-  // resgates: await api.getMyRescues() — quando endpoint /rescue-help-requests estiver disponível
-  const [items]   = useState<Item[]>([
-    ...MOCK_ADOPTIONS.map(a => ({ ...a, type: 'adoption' as const })),
-    ...MOCK_RESCUES.map(r => ({ ...r, type: 'rescue' as const })),
-  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-
-  const [loading]          = useState(false);
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedAdoption, setSelectedAdoption] = useState<typeof MOCK_ADOPTIONS[0] | null>(null);
   const [selectedRescue,   setSelectedRescue]   = useState<typeof MOCK_RESCUES[0]   | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true);
+        const adoptions = await api.getMyAdoptions();
+        const combined = [
+          ...adoptions.map((a: any) => ({ ...a, type: 'adoption' as const })),
+          ...MOCK_RESCUES.map(r => ({ ...r, type: 'rescue' as const })),
+        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setItems(combined);
+      } catch (error) {
+        console.error('Erro ao carregar solicitações:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   const handleSignTerm = async (reqId: string) => {
     try {

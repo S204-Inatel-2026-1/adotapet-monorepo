@@ -1,14 +1,14 @@
 'use client';
 
 // src/app/painel/page.tsx
-// Dashboard overview da ONG — dados mockados
-// TODO (Lucas): substituir mocks pelos endpoints reais
+// Dashboard overview da ONG
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, MapPin, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import OngHeader from '@/components/layout/OngHeader';
+import { api } from '@/services/api';
 
 // ─────────────────────────────────────────────
 // HELPERS
@@ -23,25 +23,9 @@ function getGreeting(name: string): string {
 }
 
 // ─────────────────────────────────────────────
-// DADOS MOCKADOS
-// TODO (Lucas): substituir por chamadas reais à API
+// MOCKS QUE PERMANECEM (Resgate ainda não tem API)
 // ─────────────────────────────────────────────
 
-const MOCK_STATS = {
-  totalPets: 12,
-  pendingAdoptions: 5,
-  approvedAdoptions: 8,
-  newRescues: 2,
-};
-
-// TODO (Lucas): GET /adoptions/received?limit=3
-const MOCK_RECENT_ADOPTIONS = [
-  { id: 'adoc-001', petName: 'Thor', requesterName: 'Maria Silva',  status: 'pending'  as const },
-  { id: 'adoc-002', petName: 'Thor', requesterName: 'João Pereira', status: 'pending'  as const },
-  { id: 'adoc-003', petName: 'Nina', requesterName: 'Carla Mendes', status: 'approved' as const },
-];
-
-// TODO (Lucas): GET /rescue-help-requests?limit=2 (quando backend implementar)
 const MOCK_RECENT_RESCUES = [
   {
     id: 'res-001',
@@ -70,8 +54,59 @@ const MOCK_RECENT_RESCUES = [
 export default function PainelPage() {
   const { user } = useAuth();
   const [selectedRescue, setSelectedRescue] = useState<typeof MOCK_RECENT_RESCUES[0] | null>(null);
+  
+  const [stats, setStats] = useState({
+    totalPets: 0,
+    pendingAdoptions: 0,
+    approvedAdoptions: 0,
+    newRescues: 2, // mock
+  });
+  
+  const [recentAdoptions, setRecentAdoptions] = useState<any[]>([]);
+  const [myPets, setMyPets] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { totalPets, pendingAdoptions, approvedAdoptions, newRescues } = MOCK_STATS;
+  const loadDashboardData = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      setIsLoading(true);
+      const [pets, adoptions] = await Promise.all([
+        api.getPets({ registeredById: user.id }),
+        api.getReceivedAdoptions()
+      ]);
+
+      const pending = adoptions.filter((a: any) => a.status === 'PENDING').length;
+      const approved = adoptions.filter((a: any) => a.status === 'APPROVED').length;
+
+      setStats({
+        totalPets: pets.length,
+        pendingAdoptions: pending,
+        approvedAdoptions: approved,
+        newRescues: 2,
+      });
+
+      setMyPets(pets.slice(0, 2));
+
+      // Pega as 3 mais recentes
+      setRecentAdoptions(adoptions.slice(0, 3).map((a: any) => ({
+        id: a.id,
+        petName: a.pet?.name || 'Pet',
+        requesterName: a.user?.fullName || 'Usuário',
+        status: a.status.toLowerCase()
+      })));
+
+    } catch (error) {
+      console.error('Erro ao carregar dados do painel:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  const { totalPets, pendingAdoptions, approvedAdoptions, newRescues } = stats;
 
   return (
     <main className="bg-[#F9F7F2] min-h-screen font-sans">
@@ -129,22 +164,20 @@ export default function PainelPage() {
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F9F7F2]">
-                <span className="text-2xl">🐶</span>
-                <div className="flex-1">
-                  <p className="font-bold text-[#2C4A3E] text-sm">Thor</p>
-                  <p className="text-xs text-gray-400">Labrador · Grande</p>
-                </div>
-                <span className="text-xs font-bold bg-[#E8F0E6] text-[#2C4A3E] px-3 py-1 rounded-full">Disponível</span>
-              </div>
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F9F7F2]">
-                <span className="text-2xl">🐱</span>
-                <div className="flex-1">
-                  <p className="font-bold text-[#2C4A3E] text-sm">Nina</p>
-                  <p className="text-xs text-gray-400">Siamês · Pequeno</p>
-                </div>
-                <span className="text-xs font-bold bg-[#F4C542]/20 text-[#2C4A3E] px-3 py-1 rounded-full">Em análise</span>
-              </div>
+              {totalPets === 0 ? (
+                <p className="text-sm text-gray-400 italic">Nenhum pet cadastrado.</p>
+              ) : (
+                myPets.map((pet: any) => (
+                  <div key={pet.id} className="flex items-center gap-4 p-4 rounded-2xl bg-[#F9F7F2]">
+                    <span className="text-2xl">{pet.type === 'dog' ? '🐶' : '🐱'}</span>
+                    <div className="flex-1">
+                      <p className="font-bold text-[#2C4A3E] text-sm">{pet.name}</p>
+                      <p className="text-xs text-gray-400">{pet.breed} · {pet.size}</p>
+                    </div>
+                    <span className="text-xs font-bold bg-[#E8F0E6] text-[#2C4A3E] px-3 py-1 rounded-full">Disponível</span>
+                  </div>
+                ))
+              )}
             </div>
 
             <Link
@@ -170,22 +203,26 @@ export default function PainelPage() {
             </div>
 
             <div className="space-y-3">
-              {MOCK_RECENT_ADOPTIONS.map((adoption) => (
-                <div key={adoption.id} className="flex items-center gap-4 p-4 rounded-2xl bg-[#F9F7F2]">
-                  <div className="w-9 h-9 rounded-full bg-[#E8F0E6] flex items-center justify-center text-sm font-black text-[#2C4A3E] flex-shrink-0">
-                    {adoption.requesterName[0]}
+              {recentAdoptions.length === 0 ? (
+                <p className="text-sm text-gray-400 italic">Nenhuma solicitação recente.</p>
+              ) : (
+                recentAdoptions.map((adoption) => (
+                  <div key={adoption.id} className="flex items-center gap-4 p-4 rounded-2xl bg-[#F9F7F2]">
+                    <div className="w-9 h-9 rounded-full bg-[#E8F0E6] flex items-center justify-center text-sm font-black text-[#2C4A3E] flex-shrink-0">
+                      {adoption.requesterName[0]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-[#2C4A3E] text-sm truncate">{adoption.requesterName}</p>
+                      <p className="text-xs text-gray-400">quer adotar {adoption.petName}</p>
+                    </div>
+                    <span className={`text-xs font-bold px-3 py-1 rounded-full flex-shrink-0 ${
+                      adoption.status === 'pending' ? 'bg-[#F4C542]/20 text-[#2C4A3E]' : 'bg-[#E8F0E6] text-[#2C4A3E]'
+                    }`}>
+                      {adoption.status === 'pending' ? '⏳ Pendente' : '✅ Aprovado'}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[#2C4A3E] text-sm truncate">{adoption.requesterName}</p>
-                    <p className="text-xs text-gray-400">quer adotar {adoption.petName}</p>
-                  </div>
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full flex-shrink-0 ${
-                    adoption.status === 'pending' ? 'bg-[#F4C542]/20 text-[#2C4A3E]' : 'bg-[#E8F0E6] text-[#2C4A3E]'
-                  }`}>
-                    {adoption.status === 'pending' ? '⏳ Pendente' : '✅ Aprovado'}
-                  </span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
 
             <Link
