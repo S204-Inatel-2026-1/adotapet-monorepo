@@ -2,7 +2,6 @@ import { api } from '@/services/api';
 
 describe('Integração com API', () => {
     const mockToken = 'fake-jwt-token';
-    const mockUser = { name: 'Lucas Teste', email: 'lucas@test.com', role: 'adopter' };
 
     beforeEach(() => {
         jest.clearAllMocks();

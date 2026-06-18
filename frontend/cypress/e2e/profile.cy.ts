@@ -8,7 +8,7 @@ describe('User Profile - E2E', () => {
     cy.login('adopter');
 
     // Interceptar a rota de update
-    cy.intercept('PATCH', '**/users/user-123', {
+    cy.intercept('PATCH', '**/api-backend/users/user-123', {
       statusCode: 200,
       body: {
         id: 'user-123',
@@ -51,7 +51,7 @@ describe('User Profile - E2E', () => {
   });
 
   it('should show error message if update fails', () => {
-    cy.intercept('PATCH', '**/users/user-123', {
+    cy.intercept('PATCH', '**/api-backend/users/user-123', {
       statusCode: 400,
       body: { message: 'Este e-mail já está em uso' }
     }).as('updateFail');

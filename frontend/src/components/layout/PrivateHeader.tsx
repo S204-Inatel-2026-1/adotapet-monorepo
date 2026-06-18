@@ -4,6 +4,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -188,9 +189,12 @@ export default function PrivateHeader() {
               <div className="w-5 h-5 rounded-full bg-[#F4C542] flex items-center justify-center text-[#2C4A3E] font-black text-[10px] group-hover:bg-white transition-colors overflow-hidden flex-shrink-0">
                 
                 {user?.avatar ? (
-                  <img
+                  <Image
+                    unoptimized
                     src={user.avatar}
                     alt={user.name}
+                    width={20}
+                    height={20}
                     className="w-full h-full object-cover"
                   />
                 ) : (

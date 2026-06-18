@@ -13,4 +13,6 @@ export type Pet = {
   location: string;
   description: string;
   tags?: string[];
+  status?: 'available' | 'pending' | 'adopted';
+  pendingAdoptions?: number;
 };

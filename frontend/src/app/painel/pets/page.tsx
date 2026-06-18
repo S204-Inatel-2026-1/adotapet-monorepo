@@ -4,12 +4,14 @@
 // Lista de pets cadastrados pela ONG — dados mockados
 // TODO (Lucas): substituir mocks pelos endpoints reais
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import OngHeader from '@/components/layout/OngHeader';
 import BackButton from '@/components/ui/BackButton';
+import { api } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { Pet } from '@/types/pets';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -28,48 +30,6 @@ interface OngPet {
   tags?: string[];
 }
 
-// ─── Mock ─────────────────────────────────────────────────────────────────────
-// TODO (Lucas): GET /pets?registeredById=:userId
-
-const MOCK_PETS: OngPet[] = [
-  {
-    id: 'pet-1',
-    name: 'Thor',
-    image: '/pets/thor.jpg',
-    type: 'dog',
-    breed: 'Labrador',
-    age: '2 anos',
-    size: 'large',
-    status: 'available',
-    pendingAdoptions: 2,
-    tags: ['Amigável', 'Brincalhão'],
-  },
-  {
-    id: 'pet-2',
-    name: 'Nina',
-    image: '/pets/nina.webp',
-    type: 'cat',
-    breed: 'Siamês',
-    age: '1 ano',
-    size: 'small',
-    status: 'pending',
-    pendingAdoptions: 1,
-    tags: ['Tímida', 'Carinhosa'],
-  },
-  {
-    id: 'pet-3',
-    name: 'Max',
-    image: '/pets/max.webp',
-    type: 'dog',
-    breed: 'Vira-lata',
-    age: '3 anos',
-    size: 'medium',
-    status: 'adopted',
-    pendingAdoptions: 0,
-    tags: ['Curioso', 'Inteligente'],
-  },
-];
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const STATUS_MAP: Record<PetStatus, { label: string; color: string }> = {
@@ -85,25 +45,62 @@ const SIZE_LABEL: Record<OngPet['size'], string> = {
 // ─── Componente ───────────────────────────────────────────────────────────────
 
 export default function PainelPetsPage() {
-  const [pets, setPets] = useState<OngPet[]>(MOCK_PETS);
+  const { user } = useAuth();
+  const [pets, setPets] = useState<OngPet[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [petToDelete, setPetToDelete] = useState<OngPet | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const fetchPets = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      setIsLoading(true);
+      const data = await api.getPets({ registeredById: user.id });
+      setPets(data.map((p: Pet) => ({
+        id: p.id,
+        name: p.name,
+        image: p.image,
+        type: p.type,
+        breed: p.breed,
+        age: p.age,
+        size: p.size,
+        status: p.status || 'available',
+        pendingAdoptions: p.pendingAdoptions || 0,
+        tags: p.tags,
+      })));
+    } catch (error) {
+      console.error('Erro ao carregar pets:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchPets();
+  }, [fetchPets]);
 
   const handleDelete = async () => {
     if (!petToDelete) return;
     try {
       setDeleting(true);
-      // TODO (Lucas): DELETE /pets/:petToDelete.id
-      console.log('Remover pet:', petToDelete.id);
-      await new Promise((r) => setTimeout(r, 600));
+      await api.deletePet(petToDelete.id);
       setPets((prev) => prev.filter((p) => p.id !== petToDelete.id));
       setPetToDelete(null);
-    } catch (err) {
-      console.error('Erro ao remover pet', err);
+    } catch {
+      alert('Erro ao remover pet');
     } finally {
       setDeleting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <main className="bg-[#F9F7F2] min-h-screen flex items-center justify-center">
+        <Loader2 className="size-8 text-[#3A5B4F] animate-spin" />
+      </main>
+    );
+  }
 
   return (
     <main className="bg-[#F9F7F2] min-h-screen font-sans">

@@ -27,6 +27,7 @@ Cypress.Commands.add('login', (role: 'adopter' | 'ong' = 'adopter') => {
 });
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
     interface Chainable {
       login(role?: 'adopter' | 'ong'): Chainable<void>

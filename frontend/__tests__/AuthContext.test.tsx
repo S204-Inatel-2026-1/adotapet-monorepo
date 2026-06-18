@@ -1,6 +1,5 @@
 import { render, screen, act } from "@testing-library/react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { ReactNode } from "react";
 
 // Helper component to test useAuth
 const TestComponent = () => {
@@ -9,7 +8,7 @@ const TestComponent = () => {
         <div>
             <span data-testid="auth-status">{isAuthenticated ? "authenticated" : "not authenticated"}</span>
             <span data-testid="user-name">{user?.name || "no user"}</span>
-            <button onClick={() => login("test-token", { name: "Test User", email: "test@test.com", role: "adopter" })}>
+            <button onClick={() => login("test-token", { id: "user-1", name: "Test User", email: "test@test.com", role: "adopter" })}>
                 Login
             </button>
             <button onClick={() => logout()}>Logout</button>
@@ -41,8 +40,8 @@ describe("AuthContext", () => {
 
     it("deve iniciar como autenticado se houver token e user no localStorage", async () => {
         localStorage.setItem("adotapet_token", "existing-token");
-        localStorage.setItem("adotapet_user", JSON.stringify({ name: "Existing User", email: "ex@test.com", role: "adopter" }));
-        
+        localStorage.setItem("adotapet_user", JSON.stringify({ id: "user-1", name: "Existing User", email: "ex@test.com", role: "adopter" }));
+
         render(
             <AuthProvider>
                 <TestComponent />
@@ -73,9 +72,9 @@ describe("AuthContext", () => {
 
     it("deve limpar estado e cookies ao chamar logout", async () => {
         localStorage.setItem("adotapet_token", "existing-token");
-        localStorage.setItem("adotapet_user", JSON.stringify({ name: "User", email: "u@t.com", role: "adopter" }));
+        localStorage.setItem("adotapet_user", JSON.stringify({ id: "user-1", name: "User", email: "u@t.com", role: "adopter" }));
         document.cookie = "adotapet_token=existing-token; path=/";
-        
+
         render(
             <AuthProvider>
                 <TestComponent />
@@ -93,10 +92,10 @@ describe("AuthContext", () => {
     });
 
     it("deve lançar erro se useAuth for usado fora do AuthProvider", () => {
-        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+
         expect(() => render(<TestComponent />)).toThrow("useAuth must be used within an AuthProvider");
-        
+
         consoleSpy.mockRestore();
     });
 });

@@ -2,7 +2,6 @@
 
 // src/app/denunciar/page.tsx
 
-import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useRouter } from 'next/navigation';
 import BackToHome from '@/components/ui/BackToHome';
