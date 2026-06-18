@@ -98,7 +98,7 @@ function FormAdotante() {
   const onSubmit = async (data: AdotanteForm) => {
     try {
       setError(null);
-      // TODO (Lucas): chamar api.register(data) — POST /users com role: "ADOPTER"
+      await api.register(data);
       alert("Conta criada com sucesso! Você já pode fazer login.");
       router.push("/login");
     } catch (err: any) {

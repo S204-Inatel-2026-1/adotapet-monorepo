@@ -143,6 +143,8 @@ export const api = {
         email:    userData.email,
         password: userData.password,
         phone:    userData.phone,
+        city:     userData.city,
+        state:    userData.state,
         role:     'ADOPTER',
       }),
     });

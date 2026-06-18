@@ -83,15 +83,34 @@ export default function PerfilPage() {
   } = useForm<SenhaForm>({ resolver: zodResolver(senhaSchema) });
 
   useEffect(() => {
-    if (user) {
-      reset({
-        name:  user.name  || '',
-        email: user.email || '',
-        phone: '',
-        city:  '',
-      });
+    const token = typeof window !== 'undefined' ? localStorage.getItem('adotapet_token') : null;
+    if (!token || token.split('.').length < 2) return;
+
+    let payload: { sub?: string };
+    try {
+      payload = JSON.parse(atob(token.split('.')[1]));
+    } catch {
+      return;
     }
-  }, [user, reset]);
+    if (!payload?.sub) return;
+
+    api
+      .getUserById(payload.sub)
+      .then((u) =>
+        reset({
+          name:  u.fullName ?? '',
+          email: u.email ?? '',
+          phone: u.phone ?? '',
+          city:  u.city ?? '',
+          state: u.state ?? '',
+        }),
+      )
+      .catch(() => {
+        if (user) {
+          reset({ name: user.name || '', email: user.email || '', phone: '', city: '', state: '' });
+        }
+      });
+  }, [reset, user]);
 
   // ── Submit perfil ──
   const onSubmitPerfil = async (data: PerfilForm) => {
@@ -212,6 +231,11 @@ export default function PerfilPage() {
           <div>
             <label className={labelClass}>Cidade</label>
             <input type="text" placeholder="Sua cidade" {...registerPerfil('city')} className={inputClass(false)} />
+          </div>
+
+          <div>
+            <label className={labelClass}>Estado</label>
+            <input type="text" placeholder="UF" maxLength={2} {...registerPerfil('state')} className={inputClass(false)} />
           </div>
 
           <div className="flex items-center gap-4 pt-2">
