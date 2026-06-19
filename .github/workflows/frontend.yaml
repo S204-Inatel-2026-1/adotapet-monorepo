@@ -28,11 +28,6 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: next-build
-          path: frontend/.next
-          retention-days: 1
 
   unit:
     runs-on: ubuntu-latest
@@ -58,10 +53,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - uses: actions/download-artifact@v4
-        with:
-          name: next-build
-          path: frontend/.next
+      - run: npm run build
       - name: Start app and wait for it
         run: |
           PORT=3001 npm run start &
