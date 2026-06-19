@@ -4,6 +4,27 @@ describe('ONG Dashboard - E2E (TDD)', () => {
     cy.clearCookies();
     cy.viewport('macbook-15');
 
+    // Mock da listagem de pets da ONG (o e2e roda sem backend).
+    // 1 pet evita o empty state, que renderiza DOIS links "novo pet" (header + card).
+    cy.intercept('GET', '**/api-backend/pets*', {
+      statusCode: 200,
+      body: [
+        {
+          id: 'pet-1',
+          name: 'Thor',
+          species: 'DOG',
+          sex: 'MALE',
+          breed: 'Labrador',
+          ageInMonths: 24,
+          size: 'LARGE',
+          status: 'AVAILABLE',
+          photoUrl: '/pets/thor.jpg',
+          city: 'Santa Rita do Sapucai',
+          state: 'MG',
+        },
+      ],
+    }).as('getPets');
+
     // 1. Simular Login como ONG
     cy.login('ong');
   });
