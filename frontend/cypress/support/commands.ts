@@ -16,6 +16,7 @@ Cypress.Commands.add('login', (role: 'adopter' | 'ong' = 'adopter') => {
   const token = `header.${payload}.signature`;
   
   const user = {
+    id: 'user-123',
     name: 'Lucas Teste',
     email: 'lucas@test.com',
     role: role

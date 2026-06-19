@@ -1,4 +1,7 @@
 describe('Authentication and Route Protection - E2E', () => {
+  // JWT fake decodificavel (sub + role), reutilizado no mock e nas assercoes
+  const FAKE_TOKEN = `header.${btoa(JSON.stringify({ sub: 'user-123', role: 'ADOPTER' }))}.signature`;
+
   beforeEach(() => {
     cy.clearLocalStorage();
     cy.clearCookies();
@@ -7,7 +10,7 @@ describe('Authentication and Route Protection - E2E', () => {
     // Mocks padrão
     cy.intercept('POST', '**/api-backend/auth/login', {
       statusCode: 200,
-      body: { access_token: 'fake-jwt-token' },
+      body: { access_token: FAKE_TOKEN },
     }).as('loginRequest');
 
     cy.intercept('GET', '**/api-backend/users/*', {
@@ -49,9 +52,9 @@ describe('Authentication and Route Protection - E2E', () => {
 
     // Verificar persistência
     cy.window().then((win) => {
-      expect(win.localStorage.getItem('adotapet_token')).to.eq('fake-jwt-token');
+      expect(win.localStorage.getItem('adotapet_token')).to.eq(FAKE_TOKEN);
     });
-    cy.getCookie('adotapet_token').should('have.property', 'value', 'fake-jwt-token');
+    cy.getCookie('adotapet_token').should('have.property', 'value', FAKE_TOKEN);
   });
 
   it('should show error message on login failure', () => {
