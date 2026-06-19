@@ -135,8 +135,9 @@ export default function PerfilPage() {
       const token = localStorage.getItem('adotapet_token') || '';
       if (!token || token.split('.').length < 2) throw new Error('Sessão inválida. Faça login novamente.');
       const payload = JSON.parse(atob(token.split('.')[1]));
-      // TODO (Lucas): PATCH /users/:id — { password: data.password }
-      console.log('Trocar senha do usuário', payload.sub, data.password);
+      
+      await api.changePassword(payload.sub, data.password);
+      
       setSavedSenha(true);
       resetSenha();
       setTimeout(() => setSavedSenha(false), 3000);
@@ -150,12 +151,14 @@ export default function PerfilPage() {
     try {
       const token = localStorage.getItem('adotapet_token') || '';
       const payload = JSON.parse(atob(token.split('.')[1]));
-      // TODO (Lucas): DELETE /users/:id
-      console.log('Excluir conta', payload.sub);
+      
+      await api.deleteAccount(payload.sub);
+      
       logout();
       router.push('/');
     } catch (err) {
       console.error('Erro ao excluir conta', err);
+      alert('Erro ao excluir conta. Tente novamente mais tarde.');
     }
   };
 

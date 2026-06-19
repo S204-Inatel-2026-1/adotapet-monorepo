@@ -1,18 +1,17 @@
 'use client';
 
 // src/app/painel/pets/novo/page.tsx
-// Formulário de cadastro de pet pela ONG — dados mockados
-// TODO (Lucas): conectar com POST /pets + POST /pets/:id/photo
+// Formulário de cadastro de pet pela ONG
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import PrivateHeader from '@/components/layout/PrivateHeader';
+import OngHeader from '@/components/layout/OngHeader';
 import Footer from '@/components/layout/Footer';
 import BackButton from '@/components/ui/BackButton';
-import OngHeader from '@/components/layout/OngHeader';
+import { api } from '@/services/api';
 
 // ─────────────────────────────────────────────
 // SCHEMA DE VALIDAÇÃO
@@ -24,10 +23,7 @@ const novoPetSchema = z.object({
   species: z.enum(['DOG', 'CAT', 'OTHER'], { error: 'Espécie é obrigatória' }),
   sex: z.enum(['MALE', 'FEMALE'], { error: 'Selecione o sexo' }),
   breed: z.string().optional(),
-  ageInMonths: z.preprocess(
-    (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
-    z.number({ error: 'Informe a idade' }).min(0, 'Idade inválida').max(300, 'Idade inválida')
-  ),
+  ageInMonths: z.number().min(0, 'Idade inválida').max(300, 'Idade inválida'),
   size: z.enum(['SMALL', 'MEDIUM', 'LARGE'], { error: 'Selecione o porte' }),
   description: z.string().min(10, 'Descreva o pet com pelo menos 10 caracteres'),
   city: z.string().min(2, 'Informe a cidade'),
@@ -69,14 +65,14 @@ export default function NovoPetPage() {
   const [submitted, setSubmitted] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = useForm<NovoPetForm, any, NovoPetForm>({
-    // Cast necessário: Zod v4 + z.preprocess infere tipo intermediário como unknown no resolver
-    resolver: zodResolver(novoPetSchema) as any,
+  } = useForm<NovoPetForm>({
+    resolver: zodResolver(novoPetSchema),
     defaultValues: {
       vaccinated: false,
       neutered: false,
@@ -84,16 +80,20 @@ export default function NovoPetPage() {
   });
 
   const onSubmit = async (data: NovoPetForm) => {
-    // TODO (Lucas): POST /pets com os dados abaixo
-    // Payload esperado pelo backend (CreatePetDto):
-    // { name, species, sex, ageInMonths, size, breed?, description, city, state, tags? }
-    // Após criar, se houver foto: POST /pets/:id/photo (multipart/form-data, campo 'file')
-    console.log('Dados do pet:', data);
+    try {
+      const pet = await api.createPet({
+        ...data,
+        ageInMonths: Number(data.ageInMonths),
+      });
 
-    // Simula delay de envio
-    await new Promise((r) => setTimeout(r, 1000));
+      if (selectedFile && pet.id) {
+        await api.uploadPetPhoto(pet.id, selectedFile);
+      }
 
-    setSubmitted(true);
+      setSubmitted(true);
+    } catch {
+      alert('Erro ao cadastrar pet. Tente novamente.');
+    }
   };
 
   // Tela de sucesso
@@ -168,7 +168,6 @@ export default function NovoPetPage() {
               <div className="flex-1">
                 <p className="text-sm font-medium text-[#2C4A3E] mb-1">Adicionar foto</p>
                 <p className="text-xs text-gray-400 mb-3">JPG, PNG ou WEBP. Máximo 5MB.</p>
-                {/* TODO (Lucas): capturar o arquivo e enviar via POST /pets/:id/photo após criar o pet */}
                 <label className="cursor-pointer bg-[#E8F0E6] text-[#3A5B4F] font-bold px-5 py-2.5 rounded-2xl hover:bg-[#d4e4d0] transition-all text-xs inline-block">
                   Escolher foto
                   <input
@@ -177,7 +176,10 @@ export default function NovoPetPage() {
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) setPhotoPreview(URL.createObjectURL(file));
+                      if (file) {
+                        setSelectedFile(file);
+                        setPhotoPreview(URL.createObjectURL(file));
+                      }
                     }}
                   />
                 </label>
@@ -191,8 +193,9 @@ export default function NovoPetPage() {
 
             {/* Nome */}
             <div>
-              <label className={labelClass}>Nome do pet</label>
+              <label htmlFor="name" className={labelClass}>Nome do pet</label>
               <input
+                id="name"
                 type="text"
                 placeholder="Ex: Thor"
                 {...register('name')}
@@ -205,8 +208,9 @@ export default function NovoPetPage() {
 
             {/* Espécie */}
             <div>
-              <label className={labelClass}>Espécie</label>
+              <label htmlFor="species" className={labelClass}>Espécie</label>
               <select
+                id="species"
                 {...register('species')}
                 className={inputClass(!!errors.species)}
               >
@@ -225,14 +229,16 @@ export default function NovoPetPage() {
               <label className={labelClass}>Sexo</label>
               <div className="flex gap-4">
                 {[
-                  { value: 'MALE', label: '♂ Macho' },
-                  { value: 'FEMALE', label: '♀ Fêmea' },
+                  { value: 'MALE', label: '♂ Macho', id: 'sex-male' },
+                  { value: 'FEMALE', label: '♀ Fêmea', id: 'sex-female' },
                 ].map((opt) => (
                   <label
                     key={opt.value}
+                    htmlFor={opt.id}
                     className="flex items-center gap-3 bg-[#F9F7F2] px-5 py-4 rounded-2xl cursor-pointer hover:bg-[#E8F0E6] transition-all flex-1"
                   >
                     <input
+                      id={opt.id}
                       type="radio"
                       value={opt.value}
                       {...register('sex')}
@@ -250,8 +256,9 @@ export default function NovoPetPage() {
             {/* Raça e Idade */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Raça (opcional)</label>
+                <label htmlFor="breed" className={labelClass}>Raça (opcional)</label>
                 <input
+                  id="breed"
                   type="text"
                   placeholder="Ex: Labrador"
                   {...register('breed')}
@@ -259,12 +266,13 @@ export default function NovoPetPage() {
                 />
               </div>
               <div>
-                <label className={labelClass}>Idade (em meses)</label>
+                <label htmlFor="ageInMonths" className={labelClass}>Idade (em meses)</label>
                 <input
+                  id="ageInMonths"
                   type="number"
                   placeholder="Ex: 12"
                   min={0}
-                  {...register('ageInMonths')}
+                  {...register('ageInMonths', { valueAsNumber: true })}
                   className={inputClass(!!errors.ageInMonths)}
                 />
                 {errors.ageInMonths && (
@@ -275,8 +283,9 @@ export default function NovoPetPage() {
 
             {/* Porte */}
             <div>
-              <label className={labelClass}>Porte</label>
+              <label htmlFor="size" className={labelClass}>Porte</label>
               <select
+                id="size"
                 {...register('size')}
                 className={inputClass(!!errors.size)}
               >
@@ -292,8 +301,9 @@ export default function NovoPetPage() {
 
             {/* Descrição */}
             <div>
-              <label className={labelClass}>Descrição</label>
+              <label htmlFor="description" className={labelClass}>Descrição</label>
               <textarea
+                id="description"
                 rows={4}
                 placeholder="Conte sobre a personalidade, histórico e necessidades do pet..."
                 {...register('description')}
@@ -311,8 +321,9 @@ export default function NovoPetPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Cidade</label>
+                <label htmlFor="city" className={labelClass}>Cidade</label>
                 <input
+                  id="city"
                   type="text"
                   placeholder="Ex: Santa Rita do Sapucaí"
                   {...register('city')}
@@ -323,8 +334,9 @@ export default function NovoPetPage() {
                 )}
               </div>
               <div>
-                <label className={labelClass}>Estado</label>
+                <label htmlFor="state" className={labelClass}>Estado</label>
                 <select
+                  id="state"
                   {...register('state')}
                   className={inputClass(!!errors.state)}
                 >

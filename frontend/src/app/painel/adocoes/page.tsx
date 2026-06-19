@@ -1,13 +1,13 @@
 'use client';
 
 // src/app/painel/adocoes/page.tsx
-// Solicitações de adoção recebidas pela ONG — dados mockados
-// TODO (Lucas): substituir mocks pelos endpoints reais
+// Solicitações de adoção recebidas pela ONG
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import OngHeader from '@/components/layout/OngHeader';
 import BackButton from '@/components/ui/BackButton';
+import { api } from '@/services/api';
 
 // ─────────────────────────────────────────────
 // TIPOS
@@ -31,56 +31,6 @@ interface Adoption {
 }
 
 // ─────────────────────────────────────────────
-// DADOS MOCKADOS
-// TODO (Lucas): GET /adoptions/received
-// ─────────────────────────────────────────────
-
-const INITIAL_ADOPTIONS: Adoption[] = [
-  {
-    id: 'req-abc',
-    petName: 'Thor',
-    petImage: '/pets/thor.jpg',
-    requesterName: 'João Silva',
-    requesterEmail: 'joao@test.com',
-    requesterPhone: '(35) 99999-1111',
-    requestDate: '01/06/2026',
-    status: 'pending',
-    motivation: 'Quero muito adotar o Thor! Tenho quintal grande e muito espaço para ele correr.',
-    hasOtherPets: false,
-    hasChildren: true,
-    housingType: 'Casa com quintal',
-  },
-  {
-    id: 'req-xyz',
-    petName: 'Luna',
-    petImage: '/pets/luna.jpeg',
-    requesterName: 'Maria Souza',
-    requesterEmail: 'maria@test.com',
-    requesterPhone: '(35) 99999-2222',
-    requestDate: '02/06/2026',
-    status: 'pending',
-    motivation: 'Tenho espaço para a Luna. Trabalho em casa e posso dar atenção integral.',
-    hasOtherPets: true,
-    hasChildren: false,
-    housingType: 'Apartamento',
-  },
-  {
-    id: 'req-def',
-    petName: 'Nina',
-    petImage: '/pets/nina.webp',
-    requesterName: 'Carla Mendes',
-    requesterEmail: 'carla@test.com',
-    requesterPhone: '(35) 99999-3333',
-    requestDate: '04/06/2026',
-    status: 'approved',
-    motivation: 'Adoro gatos independentes e tranquilos. Moro sozinha e quero companhia.',
-    hasOtherPets: false,
-    hasChildren: false,
-    housingType: 'Apartamento',
-  },
-];
-
-// ─────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────
 
@@ -89,6 +39,26 @@ const STATUS_MAP: Record<AdoptionStatus, { label: string; color: string; icon: s
   approved: { label: 'Aprovada', color: 'bg-[#E8F0E6] text-[#2C4A3E]', icon: '✅' },
   rejected: { label: 'Recusada', color: 'bg-red-50 text-red-500', icon: '❌' },
 };
+
+function normalizeAdoption(raw: Record<string, unknown>): Adoption {
+  const pet = raw.pet as Record<string, unknown> | undefined;
+  const user = raw.user as Record<string, unknown> | undefined;
+  return {
+    id: raw.id as string,
+    petName: (pet?.name as string) || 'Pet',
+    petImage: (pet?.photoUrl as string) || '/pets/default.jpg',
+    requesterName: (user?.fullName as string) || 'Usuário',
+    requesterEmail: (user?.email as string) || '',
+    requesterPhone: (user?.phone as string) || 'Não informado',
+    requestDate: new Date(raw.createdAt as string).toLocaleDateString('pt-BR'),
+    status: (raw.status as string).toLowerCase() as AdoptionStatus,
+    motivation: (raw.message as string) || 'Sem mensagem adicional.',
+    // Campos que podem não vir do backend simplificado, usamos default ou mock parcial
+    hasOtherPets: (raw.hasOtherPets as boolean) ?? false,
+    hasChildren: (raw.hasChildren as boolean) ?? false,
+    housingType: (raw.housingType as string) ?? 'Não informado',
+  };
+}
 
 // ─────────────────────────────────────────────
 // MODAL DE DETALHES
@@ -184,7 +154,6 @@ function AdoptionModal({
         {/* Ações — apenas se pendente */}
         {adoption.status === 'pending' && (
           <div className="flex gap-3">
-            {/* TODO (Lucas): PATCH /adoptions/:id/status { status: 'REJECTED' } */}
             <button
               data-testid="reject-btn"
               onClick={() => { onReject(adoption.id); onClose(); }}
@@ -192,7 +161,6 @@ function AdoptionModal({
             >
               ❌ Recusar
             </button>
-            {/* TODO (Lucas): PATCH /adoptions/:id/status { status: 'APPROVED' } */}
             <button
               data-testid="approve-btn"
               onClick={() => { onApprove(adoption.id); onClose(); }}
@@ -212,18 +180,45 @@ function AdoptionModal({
 // ─────────────────────────────────────────────
 
 export default function PainelAdocoesPage() {
-  const [adoptions, setAdoptions] = useState<Adoption[]>(INITIAL_ADOPTIONS);
+  const [adoptions, setAdoptions] = useState<Adoption[]>([]);
+  const [, setIsLoading] = useState(true);
   const [selected, setSelected] = useState<Adoption | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | AdoptionStatus>('all');
 
-  const handleApprove = (id: string) => {
-    // TODO (Lucas): substituir por PATCH /adoptions/:id/status { status: 'APPROVED' }
-    setAdoptions((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'approved' as const } : a)));
+  const fetchAdoptions = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await api.getReceivedAdoptions();
+      setAdoptions(data.map((item: Record<string, unknown>) => normalizeAdoption(item)));
+    } catch (error) {
+      console.error('Erro ao buscar adoções:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAdoptions();
+  }, [fetchAdoptions]);
+
+  const handleApprove = async (id: string) => {
+    try {
+      await api.updateAdoptionStatus(id, 'APPROVED');
+      setAdoptions((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'approved' as const } : a)));
+      if (selected?.id === id) setSelected((prev) => prev ? { ...prev, status: 'approved' } : null);
+    } catch {
+      alert('Erro ao aprovar adoção.');
+    }
   };
 
-  const handleReject = (id: string) => {
-    // TODO (Lucas): substituir por PATCH /adoptions/:id/status { status: 'REJECTED' }
-    setAdoptions((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'rejected' as const } : a)));
+  const handleReject = async (id: string) => {
+    try {
+      await api.updateAdoptionStatus(id, 'REJECTED');
+      setAdoptions((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'rejected' as const } : a)));
+      if (selected?.id === id) setSelected((prev) => prev ? { ...prev, status: 'rejected' } : null);
+    } catch {
+      alert('Erro ao recusar adoção.');
+    }
   };
 
   const filtered = activeFilter === 'all'

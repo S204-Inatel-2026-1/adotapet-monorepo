@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import BackToHome from '@/components/ui/BackToHome';
+import Image from "next/image";
 
 //  O CONTRATO (ZOD): Aqui definimos as regras do formulário
 const loginSchema = z.object({
@@ -52,6 +53,10 @@ export default function Login() {
             const payload = decodeJwtPayload(token);
             const userId = payload?.sub;
 
+            if (!userId) {
+                throw new Error('Erro ao identificar usuário no token');
+            }
+
             const rawUser = await api.getUserById(userId);
             const userData = normalizeUser(rawUser);
 
@@ -63,8 +68,9 @@ export default function Login() {
             } else {
                 router.push('/dashboard');
             }
-        } catch (err: any) {
-            setError(err.message || 'E-mail ou senha inválidos');
+        } catch (err: unknown) {
+            const errorMsg = err instanceof Error ? err.message : 'E-mail ou senha inválidos';
+            setError(errorMsg);
             console.error("Erro no login:", err);
         }
     };
@@ -96,10 +102,13 @@ export default function Login() {
                         <div className="absolute -top-6 -left-6 w-24 h-24 bg-accent rounded-full opacity-50 blur-xl" />
                         <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-secondary rounded-full opacity-40 blur-xl" />
                         <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-card">
-                            <img
+                            <Image
                                 src="https://images.unsplash.com/photo-1739513261094-ba34a1c9e307?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjdXRlJTIwY2F0JTIwaWxsdXN0cmF0aW9uJTIwZnJpZW5kbHl8ZW58MXx8fHwxNzczNzA1MTE3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
                                 alt="Friendly cat"
+                                width={1080}
+                                height={500}
                                 className="w-full h-[500px] object-cover"
+                                unoptimized
                             />
                         </div>
                     </div>

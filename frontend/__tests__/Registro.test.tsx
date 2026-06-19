@@ -14,6 +14,7 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/services/api", () => ({
     api: {
         register: jest.fn(),
+        registerOrganization: jest.fn(),
     },
 }));
 
@@ -115,5 +116,40 @@ describe("Página de Registro", () => {
         });
 
         alertMock.mockRestore();
-    });
-});
+        });
+
+    it("deve realizar registro de ONG com sucesso e redirecionar", async () => {
+        const alertMock = jest.spyOn(window, "alert").mockImplementation();
+        (api.registerOrganization as jest.Mock).mockResolvedValue({ id: 'org-1' });
+
+        render(
+            <AuthProvider>
+                <Register />
+            </AuthProvider>
+        );
+
+        // Clica no toggle "Sou uma ONG"
+        await userEvent.click(screen.getByRole("button", { name: /sou uma ong/i }));
+
+        // Preenche dados do responsável
+        await userEvent.type(screen.getByLabelText("Nome completo do responsável"), "Admin ONG");
+        await userEvent.type(screen.getByLabelText("E-mail"), "admin@ong.com");
+        await userEvent.type(screen.getByLabelText("Senha"), "Password123!");
+        await userEvent.type(screen.getByLabelText("Confirmar senha"), "Password123!");
+
+        // Preenche dados da ONG
+        await userEvent.type(screen.getByLabelText("Nome legal da ONG"), "Instituto Pet Feliz");
+        await userEvent.type(screen.getByLabelText("Cidade"), "Santa Rita");
+        await userEvent.selectOptions(screen.getByLabelText("Estado"), "MG");
+
+        await userEvent.click(screen.getByRole("button", { name: /cadastrar ong/i }));
+
+        await waitFor(() => {
+            expect(api.registerOrganization).toHaveBeenCalled();
+            expect(alertMock).toHaveBeenCalledWith("Conta da ONG criada com sucesso! Você já pode fazer login.");
+            expect(mockPush).toHaveBeenCalledWith("/login");
+        }, { timeout: 10000 });
+
+        alertMock.mockRestore();
+    }, 30000);
+        });

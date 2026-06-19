@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Heart, Mail, Lock, User, Phone, MapPin, PawPrint, CheckCircle2, Building2, FileText, Info } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -98,13 +99,23 @@ function FormAdotante() {
   const onSubmit = async (data: AdotanteForm) => {
     try {
       setError(null);
-      await api.register(data);
+      await api.register({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        phone: data.phone,
+        city: data.city,
+        state: data.state,
+        role: 'ADOPTER',
+      });
       alert("Conta criada com sucesso! Você já pode fazer login.");
       router.push("/login");
-    } catch (err: any) {
-      setError(err.message || "Erro ao criar conta. Tente novamente.");
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Erro ao criar conta. Tente novamente.";
+      setError(errorMsg);
     }
   };
+
 
   const stateOptions = brazilianStates.map((s) => ({ value: s, label: s }));
 
@@ -245,12 +256,12 @@ function FormOng() {
   const onSubmit = async (data: OngForm) => {
     try {
       setError(null);
-      // TODO (Lucas): chamar api.registerOrganization(data) — POST /organizations/register
-      // O backend cria o usuário ONG_ADMIN, a organização e vincula pelo organizationId
+      await api.registerOrganization(data);
       alert("Conta da ONG criada com sucesso! Você já pode fazer login.");
       router.push("/login");
-    } catch (err: any) {
-      setError(err.message || "Erro ao criar conta. Tente novamente.");
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Erro ao criar conta. Tente novamente.";
+      setError(errorMsg);
     }
   };
 
@@ -333,7 +344,7 @@ function FormOng() {
         />
       </div>
 
-      {/* Divisor */}
+      {/* Dados da ONG */}
       <div className="flex items-center gap-2 pt-2 pb-0.5">
         <Building2 className="size-4 text-muted-foreground" />
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -411,7 +422,6 @@ function FormOng() {
         />
       </div>
 
-      {/* Aviso informativo */}
       <div className="flex items-start gap-3 p-3 rounded-2xl bg-[#E8F0E6] border border-[#2C4A3E]/10">
         <Info className="size-4 text-[#2C4A3E] mt-0.5 shrink-0" />
         <p className="text-xs text-[#2C4A3E]/80 leading-relaxed">
@@ -444,7 +454,6 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 py-12 relative overflow-hidden bg-background">
-      {/* Elementos Decorativos */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-accent/20 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-secondary/30 rounded-full blur-3xl" />
@@ -465,13 +474,9 @@ export default function Register() {
       </div>
 
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-start relative z-10">
-
-        {/* Lado Esquerdo - Formulário */}
         <div className="flex items-center justify-center order-2 md:order-1">
           <div className="w-full max-w-md">
             <div className="bg-card rounded-3xl shadow-xl border border-border/50 p-8 md:p-10">
-
-              {/* Logo */}
               <div className="flex items-center justify-center gap-2 mb-6">
                 <div className="bg-accent p-3 rounded-full">
                   <Heart className="size-7 text-accent-foreground fill-accent-foreground" />
@@ -479,7 +484,6 @@ export default function Register() {
                 <span className="text-2xl font-bold text-foreground">AdotaPET</span>
               </div>
 
-              {/* Toggle Adotante / ONG */}
               <div className="flex rounded-2xl border border-border/50 p-1 mb-6 bg-muted/30">
                 <button
                   type="button"
@@ -507,7 +511,6 @@ export default function Register() {
                 </button>
               </div>
 
-              {/* Título dinâmico */}
               <div className="text-center mb-8">
                 <h1 className="text-2xl font-bold text-foreground mb-2">
                   {isOng ? "Cadastrar minha ONG" : "Criar conta para adoção"}
@@ -519,10 +522,8 @@ export default function Register() {
                 </p>
               </div>
 
-              {/* Formulário condicional */}
               {isOng ? <FormOng /> : <FormAdotante />}
 
-              {/* Rodapé comum */}
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-border/50" />
@@ -546,7 +547,6 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Patinhas decorativas */}
             <div className="mt-6 flex justify-center gap-2">
               <PawPrint className="size-6 text-accent/60" />
               <PawPrint className="size-5 text-secondary/60" />
@@ -555,15 +555,16 @@ export default function Register() {
           </div>
         </div>
 
-        {/* Lado Direito - Ilustração */}
         <div className="hidden md:flex flex-col items-center justify-center order-1 md:order-2 sticky top-8">
           <div className="relative">
             <div className="absolute -top-6 -right-6 w-24 h-24 bg-accent rounded-full opacity-50 blur-xl" />
             <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-secondary rounded-full opacity-40 blur-xl" />
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-card">
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1735989967755-706e5edcb44b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmllbmRseSUyMGRvZyUyMHdlbGNvbWluZyUyMGhhcHB5fGVufDF8fHx8MTc3MzcwNTExN3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
                 alt="Friendly dog"
+                width={1080}
+                height={500}
                 className="w-full h-[500px] object-cover"
               />
             </div>

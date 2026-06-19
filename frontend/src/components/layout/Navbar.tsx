@@ -28,9 +28,9 @@ export default function Navbar() {
 
         {/* Links */}
         <div className="hidden md:flex items-center gap-8 text-[#2C4A3E] font-medium text-sm">
-          <a href="/#pets" className="hover:text-black transition-colors">Adotar</a>
-          <a href="/#como-funciona" className="hover:text-black transition-colors">Como funciona</a>
-          <a href="/#ongs" className="hover:text-black transition-colors">ONGs</a>
+          <Link href="/#pets" className="hover:text-black transition-colors">Adotar</Link>
+          <Link href="/#como-funciona" className="hover:text-black transition-colors">Como funciona</Link>
+          <Link href="/#ongs" className="hover:text-black transition-colors">ONGs</Link>
           <Link href="/resgate" className="hover:text-black transition-colors">Resgate</Link>
           <Link href="/denunciar" className="hover:text-black transition-colors">Denunciar</Link>
 

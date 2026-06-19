@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import BackToHome from '@/components/ui/BackToHome';
 import Header from '@/components/layout/Header';

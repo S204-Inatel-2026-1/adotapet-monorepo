@@ -1,12 +1,49 @@
 'use client';
 
-// src/app/minhas-adocoes/page.tsx
+// src/app/minhas-solicitacoes/page.tsx
 
 import { useState, useEffect } from 'react';
 import { api } from '@/services/api';
 import PrivateHeader from '@/components/layout/PrivateHeader';
 import BackButton from '@/components/ui/BackButton';
 import { X, MapPin, Calendar, Clock, CheckCircle2, Circle, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+
+// ─── Tipos ──────────────────────────────────────────────────────────────────
+
+interface AdoptionRequest {
+  id: string;
+  type: 'adoption';
+  status: string;
+  createdAt: string;
+  message?: string;
+  pet: {
+    name: string;
+    photoUrl: string;
+    breed: string;
+    species: string;
+    sex: string;
+    age: string;
+    size: string;
+    city?: string;
+    state?: string;
+  };
+}
+
+interface RescueRequest {
+  id: string;
+  type: 'rescue';
+  status: string;
+  createdAt: string;
+  title: string;
+  description: string;
+  address: string;
+  city: string;
+  state: string;
+}
+
+type Item = AdoptionRequest | RescueRequest;
 
 // ─── Configs de status ───────────────────────────────────────────────────────
 
@@ -57,51 +94,7 @@ function getRescueStep(status: string): number {
   return 0;
 }
 
-// ─── Mock de dados ────────────────────────────────────────────────────────────
-// TODO (Lucas): remover mocks e buscar dados reais
-// - adoções: GET /adoptions/my-requests
-// - resgates: GET /rescue-help-requests (quando endpoint estiver disponível)
-
-const MOCK_ADOPTIONS = [
-  {
-    id: 'adoc-1',
-    type: 'adoption' as const,
-    status: 'PENDING',
-    createdAt: '2026-06-01T10:00:00Z',
-    message: 'Tenho experiência com cães e moro em casa com quintal.',
-    pet: {
-      name: 'Thor',
-      breed: 'Labrador',
-      photoUrl: '/pets/thor.jpg',
-      species: 'DOG',
-      age: '2 anos',
-      size: 'LARGE',
-      sex: 'MALE',
-      city: 'Santa Rita do Sapucaí',
-      state: 'MG',
-      description: 'Thor é um labrador carinhoso e cheio de energia.',
-    },
-  },
-  {
-    id: 'adoc-2',
-    type: 'adoption' as const,
-    status: 'APPROVED',
-    createdAt: '2026-05-20T14:30:00Z',
-    message: 'Adoro gatos e tenho muito espaço em casa.',
-    pet: {
-      name: 'Luna',
-      breed: 'SRD',
-      photoUrl: '/pets/luna.jpg',
-      species: 'CAT',
-      age: '1 ano',
-      size: 'SMALL',
-      sex: 'FEMALE',
-      city: 'Pouso Alegre',
-      state: 'MG',
-      description: 'Luna é uma gatinha tranquila e afetuosa.',
-    },
-  },
-];
+// ─── Mock de resgate (Resgate ainda não tem API) ───────────────────────────────
 
 const MOCK_RESCUES = [
   {
@@ -131,7 +124,7 @@ const MOCK_RESCUES = [
 // ─── Modal de Adoção ─────────────────────────────────────────────────────────
 
 function AdoptionModal({ adoption, onClose, onSignTerm }: {
-  adoption: typeof MOCK_ADOPTIONS[0];
+  adoption: AdoptionRequest;
   onClose: () => void;
   onSignTerm: (id: string) => void;
 }) {
@@ -164,11 +157,12 @@ function AdoptionModal({ adoption, onClose, onSignTerm }: {
 
           {/* Pet */}
           <div className="flex gap-4">
-            <div className="w-24 h-24 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
-              <img
+            <div className="w-24 h-24 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0 relative">
+              <Image
                 src={adoption.pet.photoUrl || '/pets/placeholder.jpg'}
                 alt={adoption.pet.name}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
             </div>
             <div className="flex-1">
@@ -195,7 +189,7 @@ function AdoptionModal({ adoption, onClose, onSignTerm }: {
           {adoption.message && (
             <div className="bg-[#F9F7F2] rounded-2xl p-4">
               <p className="text-xs font-bold text-[#2C4A3E] mb-1">Sua mensagem</p>
-              <p className="text-sm text-gray-500 leading-relaxed">"{adoption.message}"</p>
+              <p className="text-sm text-gray-500 leading-relaxed">&quot;{adoption.message}&quot;</p>
             </div>
           )}
 
@@ -388,22 +382,30 @@ function RescueModal({ rescue, onClose }: {
 
 // ─── Página Principal ─────────────────────────────────────────────────────────
 
-type Item =
-  | (typeof MOCK_ADOPTIONS[0] & { type: 'adoption' })
-  | (typeof MOCK_RESCUES[0]   & { type: 'rescue'   });
-
 export default function MinhasSolicitacoesPage() {
-  // TODO (Lucas): substituir por dados reais
-  // adoções: await api.getMyAdoptions()
-  // resgates: await api.getMyRescues() — quando endpoint /rescue-help-requests estiver disponível
-  const [items]   = useState<Item[]>([
-    ...MOCK_ADOPTIONS.map(a => ({ ...a, type: 'adoption' as const })),
-    ...MOCK_RESCUES.map(r => ({ ...r, type: 'rescue' as const })),
-  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedAdoption, setSelectedAdoption] = useState<AdoptionRequest | null>(null);
+  const [selectedRescue,   setSelectedRescue]   = useState<RescueRequest   | null>(null);
 
-  const [loading]          = useState(false);
-  const [selectedAdoption, setSelectedAdoption] = useState<typeof MOCK_ADOPTIONS[0] | null>(null);
-  const [selectedRescue,   setSelectedRescue]   = useState<typeof MOCK_RESCUES[0]   | null>(null);
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true);
+        const adoptions = await api.getMyAdoptions();
+        const combined = [
+          ...adoptions.map((a: AdoptionRequest) => ({ ...a, type: 'adoption' as const })),
+          ...MOCK_RESCUES.map(r => ({ ...r, type: 'rescue' as const })),
+        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setItems(combined as Item[]);
+      } catch (error) {
+        console.error('Erro ao carregar solicitações:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   const handleSignTerm = async (reqId: string) => {
     try {
@@ -450,12 +452,12 @@ export default function MinhasSolicitacoesPage() {
             <p className="text-4xl mb-4">🐾</p>
             <p className="font-bold text-[#2C4A3E] text-lg mb-2">Nenhuma solicitação ainda</p>
             <p className="text-gray-400 mb-8">Explore os pets disponíveis e faça seu primeiro pedido!</p>
-            <a
+            <Link
               href="/dashboard"
               className="bg-[#3A5B4F] text-white px-8 py-3 rounded-2xl font-bold hover:bg-[#2C4A3E] transition-all inline-block"
             >
               Ver pets disponíveis
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="space-y-4">
@@ -469,11 +471,12 @@ export default function MinhasSolicitacoesPage() {
                     className="w-full bg-white rounded-[24px] border border-gray-100 p-6 flex items-center gap-6 hover:border-[#3A5B4F]/30 hover:shadow-sm transition-all text-left"
                   >
                     {/* Foto do pet */}
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
-                      <img
+                    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0 relative">
+                      <Image
                         src={item.pet?.photoUrl || '/pets/placeholder.jpg'}
                         alt={item.pet?.name}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                     </div>
 
@@ -517,11 +520,11 @@ export default function MinhasSolicitacoesPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <span className="bg-red-50 text-red-500 text-xs font-bold px-2 py-0.5 rounded-full">🆘 Resgate</span>
                     </div>
-                    <h3 className="font-black text-[#2C4A3E] text-base leading-tight truncate">{(item as any).title}</h3>
-                    {((item as any).city || (item as any).state) && (
+                    <h3 className="font-black text-[#2C4A3E] text-base leading-tight truncate">{item.title}</h3>
+                    {(item.city || item.state) && (
                       <p className="text-sm text-gray-400 flex items-center gap-1">
                         <MapPin className="size-3" />
-                        {(item as any).city}{(item as any).state ? `, ${(item as any).state}` : ''}
+                        {item.city}{item.state ? `, ${item.state}` : ''}
                       </p>
                     )}
                     <p className="text-xs text-gray-300 mt-1 flex items-center gap-1">

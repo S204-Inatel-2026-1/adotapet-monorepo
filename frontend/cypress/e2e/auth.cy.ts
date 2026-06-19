@@ -5,12 +5,12 @@ describe('Authentication and Route Protection - E2E', () => {
     cy.viewport('macbook-15');
 
     // Mocks padrão
-    cy.intercept('POST', '**/auth/login', {
+    cy.intercept('POST', '**/api-backend/auth/login', {
       statusCode: 200,
       body: { access_token: 'fake-jwt-token' },
     }).as('loginRequest');
 
-    cy.intercept('GET', '**/users/*', {
+    cy.intercept('GET', '**/api-backend/users/*', {
       statusCode: 200,
       body: {
         id: 'user-123',
@@ -20,7 +20,7 @@ describe('Authentication and Route Protection - E2E', () => {
       },
     }).as('getUserRequest');
 
-    cy.intercept('POST', '**/users', {
+    cy.intercept('POST', '**/api-backend/users', {
       statusCode: 201,
       body: { id: 'user-123', email: 'novo@usuario.com' },
     }).as('registerRequest');
@@ -55,7 +55,7 @@ describe('Authentication and Route Protection - E2E', () => {
   });
 
   it('should show error message on login failure', () => {
-    cy.intercept('POST', '**/auth/login', {
+    cy.intercept('POST', '**/api-backend/auth/login', {
       statusCode: 401,
       body: { message: 'Credenciais inválidas' },
     }).as('loginFail');
@@ -114,7 +114,7 @@ describe('Authentication and Route Protection - E2E', () => {
     cy.url().should('eq', Cypress.config().baseUrl + '/');
     cy.getCookie('adotapet_token').should('not.exist');
     cy.window().then((win) => {
-      expect(win.localStorage.getItem('adotapet_token')).to.be.null;
+      expect(win.localStorage.getItem('adotapet_token')).to.equal(null);
     });
   });
 });
