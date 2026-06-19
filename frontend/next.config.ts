@@ -15,7 +15,10 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
-    remotePatterns: [], // só imagens locais, sem domínios externos
+    remotePatterns: [
+      // imagens de ilustração (Unsplash) usadas nas telas de login e registro
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+    ],
   },
 };
 
