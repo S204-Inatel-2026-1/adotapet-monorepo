@@ -42,7 +42,7 @@ const STATUS_MAP: Record<AdoptionStatus, { label: string; color: string; icon: s
 
 function normalizeAdoption(raw: Record<string, unknown>): Adoption {
   const pet = raw.pet as Record<string, unknown> | undefined;
-  const user = raw.user as Record<string, unknown> | undefined;
+  const user = raw.requester as Record<string, unknown> | undefined;
   return {
     id: raw.id as string,
     petName: (pet?.name as string) || 'Pet',

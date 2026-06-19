@@ -31,7 +31,7 @@ describe('PainelAdocoesPage', () => {
       createdAt: '2026-06-01T10:00:00Z',
       message: 'Mensagem do Lucas',
       pet: { name: 'Thor', photoUrl: '/thor.jpg' },
-      user: { fullName: 'Lucas Santos', email: 'lucas@test.com', phone: '123456' }
+      requester: { fullName: 'Lucas Santos', email: 'lucas@test.com', phone: '123456' }
     },
     {
       id: 'a2',
@@ -39,7 +39,7 @@ describe('PainelAdocoesPage', () => {
       createdAt: '2026-05-20T10:00:00Z',
       message: 'Mensagem da Maria',
       pet: { name: 'Luna', photoUrl: '/luna.jpg' },
-      user: { fullName: 'Maria Silva', email: 'maria@test.com' }
+      requester: { fullName: 'Maria Silva', email: 'maria@test.com' }
     }
   ];
 
