@@ -7,7 +7,9 @@ describe('Authentication and Route Protection - E2E', () => {
     // Mocks padrão
     cy.intercept('POST', '**/api-backend/auth/login', {
       statusCode: 200,
-      body: { access_token: 'fake-jwt-token' },
+      body: {
+        access_token: `header.${btoa(JSON.stringify({ sub: 'user-123', role: 'ADOPTER' }))}.signature`,
+      },
     }).as('loginRequest');
 
     cy.intercept('GET', '**/api-backend/users/*', {

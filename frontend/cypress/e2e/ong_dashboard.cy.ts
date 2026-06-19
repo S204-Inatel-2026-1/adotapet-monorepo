@@ -4,6 +4,9 @@ describe('ONG Dashboard - E2E (TDD)', () => {
     cy.clearCookies();
     cy.viewport('macbook-15');
 
+    // Mock da listagem de pets da ONG (o e2e roda sem backend)
+    cy.intercept('GET', '**/api-backend/pets*', { statusCode: 200, body: [] }).as('getPets');
+
     // 1. Simular Login como ONG
     cy.login('ong');
   });
