@@ -104,7 +104,9 @@ function FormAdotante() {
         email: data.email,
         password: data.password,
         phone: data.phone,
-        role: 'ADOPTER'
+        city: data.city,
+        state: data.state,
+        role: 'ADOPTER',
       });
       alert("Conta criada com sucesso! Você já pode fazer login.");
       router.push("/login");

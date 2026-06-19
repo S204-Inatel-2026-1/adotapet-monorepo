@@ -14,6 +14,8 @@ export class UsersService {
     fullName: true,
     email: true,
     phone: true,
+    city: true,
+    state: true,
     role: true,
     isActive: true,
     organizationId: true,

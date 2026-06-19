@@ -66,6 +66,20 @@ export class CreateUserDto {
   @MaxLength(30)
   phone?: string;
 
+  @ApiPropertyOptional({ example: 'Santa Rita do Sapucaí' })
+  @IsOptional()
+  @Transform(trimString)
+  @IsString()
+  @MaxLength(120)
+  city?: string;
+
+  @ApiPropertyOptional({ example: 'MG' })
+  @IsOptional()
+  @Transform(toUpper)
+  @IsString()
+  @MaxLength(2)
+  state?: string;
+
   @ApiPropertyOptional({ enum: UserRole, example: UserRole.ADOPTER })
   @IsOptional()
   @Transform(toUpper)
