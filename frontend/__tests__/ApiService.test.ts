@@ -345,6 +345,40 @@ describe('API Service - Unit Tests', () => {
       );
     });
 
+    it('should call requestPasswordReset with correct payload', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ message: 'Enviado' }),
+      });
+
+      await api.requestPasswordReset('test@test.com');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/forgot-password'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ email: 'test@test.com' }),
+        })
+      );
+    });
+
+    it('should call resetPassword with correct payload', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+
+      await api.resetPassword('fake-token', 'NewPassword123!');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/reset-password'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ token: 'fake-token', password: 'NewPassword123!' }),
+        })
+      );
+    });
+
     it('should throw error when API returns not ok', async () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: false,
