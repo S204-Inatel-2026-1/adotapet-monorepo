@@ -178,7 +178,7 @@ export default function Login() {
                                 </div>
 
                                 <div className="text-right">
-                                    <Link href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">
+                                    <Link href="/esqueceu-senha" className="text-sm text-primary hover:text-primary/80 transition-colors">
                                         Esqueceu sua senha?
                                     </Link>
                                 </div>

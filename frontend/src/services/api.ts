@@ -270,4 +270,18 @@ export const api = {
     if (!response.ok) throw new Error('Erro ao fazer upload da foto');
     return response.json();
   },
+
+  requestPasswordReset: async (email: string) => {
+    return fetchClient('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  resetPassword: async (token: string, password: string) => {
+    return fetchClient('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+    });
+  },
 };
