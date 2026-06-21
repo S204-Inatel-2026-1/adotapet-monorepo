@@ -1,4 +1,3 @@
-import type { Config } from 'jest'
 import nextJest from 'next/jest.js'
 
 // Aponta para a raiz do projeto para o Jest ler o next.config.ts e ficheiros .env
@@ -6,7 +5,8 @@ const createJestConfig = nextJest({
     dir: './',
 })
 
-const config: Config = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const config: any = {
     coverageProvider: 'v8',
     testEnvironment: 'jsdom',
     setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],

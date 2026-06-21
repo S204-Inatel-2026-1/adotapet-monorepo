@@ -6,8 +6,24 @@ const protectedRoutes = ['/dashboard', '/perfil', '/minhas-solicitacoes', '/pain
 const authRoutes = ['/login', '/registro'];
 
 export function middleware(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+
+  // 1. Proxy API/Uploads requests to the backend using runtime environment variables
+  if (pathname.startsWith('/api-backend')) {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    const remainingPath = pathname.substring('/api-backend'.length);
+    const targetUrl = new URL(`${backendUrl}${remainingPath}${search}`);
+    return NextResponse.rewrite(targetUrl);
+  }
+
+  if (pathname.startsWith('/uploads/')) {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    const targetUrl = new URL(`${backendUrl}${pathname}${search}`);
+    return NextResponse.rewrite(targetUrl);
+  }
+
+  // 2. Authentication & Authorization routing
   const token = request.cookies.get('adotapet_token')?.value;
-  const { pathname } = request.nextUrl;
 
   if (protectedRoutes.some(r => pathname.startsWith(r)) && !token) {
     return NextResponse.redirect(new URL('/login', request.url));
@@ -29,5 +45,7 @@ export const config = {
     '/ajuda/:path*',
     '/login',
     '/registro',
+    '/api-backend/:path*',
+    '/uploads/:path*',
   ],
 };
