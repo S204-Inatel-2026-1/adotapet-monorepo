@@ -274,6 +274,14 @@ Após rodar o seed (`npm run seed`), há um usuário administrador:
 | `DATABASE_URL` | Conexão MySQL para o Prisma | Local: `mysql://root:root@localhost:3306/adotapet`<br>Docker: `mysql://root:root@mysql:3306/adotapet` |
 | `JWT_SECRET` | Segredo para assinar os tokens JWT | `troque_em_producao` |
 | `PORT` | Porta da API | `3000` |
+| `FRONTEND_URL` | URL usada no link de recuperação de senha | `http://localhost:3001` |
+| `PASSWORD_RESET_TOKEN_TTL_MINUTES` | Validade do token de recuperação | `30` |
+| `SMTP_HOST` | Servidor SMTP responsável pelo envio | `smtp.gmail.com` |
+| `SMTP_PORT` | Porta do servidor SMTP | `587` |
+| `SMTP_SECURE` | Usa TLS direto, normalmente na porta 465 | `false` |
+| `SMTP_USER` | Usuário da conta SMTP | `seu-email@gmail.com` |
+| `SMTP_PASS` | Senha de aplicativo ou credencial SMTP | `sua-senha-de-aplicativo` |
+| `SMTP_FROM` | Remetente exibido no e-mail | `AdotaPet <seu-email@gmail.com>` |
 
 No Docker Compose essas variáveis já vêm definidas no serviço `backend`.
 
@@ -281,7 +289,7 @@ No Docker Compose essas variáveis já vêm definidas no serviço `backend`.
 
 Atualmente o frontend **não depende de `.env`**: a URL da API é resolvida pelo rewrite em [`frontend/next.config.ts`](frontend/next.config.ts) (`/api-backend` → `http://localhost:3000`).
 
-> ℹ️ Ainda não há `.env.example` versionado no repositório.
+Use [`backend/.env.example`](backend/.env.example) como modelo, sem versionar credenciais reais.
 
 ---
 

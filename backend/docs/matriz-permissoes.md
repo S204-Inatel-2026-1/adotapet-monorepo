@@ -24,6 +24,8 @@ Este documento descreve o nivel de acesso das rotas atuais do backend AdotaPet.
 | Metodo | Rota | Acesso | Regra |
 | --- | --- | --- | --- |
 | POST | `/auth/login` | Publica | Autentica email e senha e retorna JWT com `organizationId` quando existir |
+| POST | `/auth/forgot-password` | Publica | Valida o email cadastrado e envia um link temporario de recuperacao |
+| POST | `/auth/reset-password` | Publica | Consome token de uso unico e grava a nova senha com hash |
 
 ## Users
 

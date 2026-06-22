@@ -29,6 +29,7 @@ O AdotaPet nasce com o objetivo de estruturar e centralizar o processo de adoç�
 - ✅ Módulos Base: Pets, Usuários e ONGs implementados.
 - ✅ Segurança Avançada: Login (JWT + Bcrypt) e RBAC (Controle de Acesso por Papéis: ADMIN, ONG_ADMIN, ADOPTER).
 - ✅ Conta ONG: cadastro de usuário ONG_ADMIN vinculado a uma organização via `organizationId`.
+- ✅ Recuperação de senha: link de uso único enviado por e-mail, com expiração e troca segura da senha.
 - ✅ Upload de Arquivos: Imagens de Pets via Multer (preparado para Docker Volumes).
 - ✅ Adoções & Termos: Fluxo completo de match, transações de aprovação e assinatura digital com rastro de auditoria (IP/User-Agent).
 - ⏳ Próximos passos: Sistema de Denúncias e Resgates (Upload de mídia e geolocalização).
@@ -116,6 +117,12 @@ Para testar uma conta de ONG, use `Organizations -> POST /organizations/register
 - Em rotas com ownership, o usuário só pode alterar os próprios recursos.
 - O Frontend **não precisa enviar `registeredById`** ao criar pet; esse campo é preenchido no backend.
 - Quando o usuário autenticado é `ONG_ADMIN`, o backend também vincula automaticamente o pet à organização do usuário.
+
+### Recuperação de senha por e-mail
+
+O frontend usa `POST /auth/forgot-password` para solicitar o link e `POST /auth/reset-password` para gravar a nova senha. Configure `FRONTEND_URL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` e `SMTP_FROM` no ambiente do backend. Consulte `.env.example` para um modelo.
+
+O token expira em 30 minutos por padrão, pode ser usado uma única vez e somente seu hash é armazenado no banco. O prazo pode ser alterado com `PASSWORD_RESET_TOKEN_TTL_MINUTES`.
 
 ## Scripts Úteis
 
