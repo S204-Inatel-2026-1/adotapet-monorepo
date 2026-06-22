@@ -29,6 +29,14 @@ services:
       PORT: 3000
       DATABASE_URL: "mysql://root:root@mysql:3306/adotapet"
       JWT_SECRET: "trocar_em_producao"
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3001}"
+      PASSWORD_RESET_TOKEN_TTL_MINUTES: "${PASSWORD_RESET_TOKEN_TTL_MINUTES:-30}"
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_SECURE: "${SMTP_SECURE:-false}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASS: "${SMTP_PASS:-}"
+      SMTP_FROM: "${SMTP_FROM:-}"
 
     ports:
       - "3000:3000"

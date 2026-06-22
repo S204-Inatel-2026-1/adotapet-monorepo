@@ -87,14 +87,28 @@ model User {
 
   organization Organization? @relation("OrganizationUsers", fields: [organizationId], references: [id])
 
-  petsRegistered     Pet[]
-  adoptionRequests   AdoptionRequest[]
-  rescueHelpRequests RescueHelpRequest[]
-  reportsOpened      Report[]                      @relation("ReportsOpened")
-  reportsAgainst     Report[]                      @relation("ReportsAgainstUser")
-  termSignatures     ResponsibilityTermSignature[]
+  petsRegistered      Pet[]
+  adoptionRequests    AdoptionRequest[]
+  rescueHelpRequests  RescueHelpRequest[]
+  reportsOpened       Report[]                      @relation("ReportsOpened")
+  reportsAgainst      Report[]                      @relation("ReportsAgainstUser")
+  termSignatures      ResponsibilityTermSignature[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([organizationId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
 }
 
 model Organization {
@@ -165,7 +179,7 @@ model AdoptionRequest {
   requester   User   @relation(fields: [requesterId], references: [id])
 
   responsibilityTerm ResponsibilityTerm?
-  termSignatures ResponsibilityTermSignature[]
+  termSignatures     ResponsibilityTermSignature[]
 
   @@index([petId, status])
   @@index([requesterId, status])

@@ -107,6 +107,15 @@ Exemplos de rotas que exigem token:
 
 Se o token estiver ausente ou inválido, a API retorna `401 Unauthorized`.
 
+### Recuperação de senha
+
+As duas rotas são públicas:
+
+- `POST /auth/forgot-password` com `{ "email": "usuario@adotapet.com" }` envia o link.
+- `POST /auth/reset-password` com `{ "token": "...", "password": "NovaSenha@123" }` grava a nova senha.
+
+O link aponta para `/recuperar-senha?token=...` no frontend. Tokens expirados ou já utilizados são rejeitados.
+
 ## 5. Novidades (Upload e RBAC)
 
 - **Upload de Foto:** A rota `POST /pets/{id}/photo` usa `multipart/form-data`. O Swagger exibirá um botão **Choose File**. O backend processa e devolve a URL.
